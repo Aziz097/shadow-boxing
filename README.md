@@ -18,10 +18,12 @@ _“”_
 
 ---
 
-## 📅 Logbook Mingguan
+## Laporan Logbook Mingguan
 
 | Tanggal    | Kegiatan                                                           | Hasil / Progress Pekerjaan                                                         |
 | ---------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
 | 10/28/2025 | Pembuatan Repositori github Shadow Boxing, dan pembagian pekerjaan | Repositori github tugas besar dan koordinasi tim terkait pembagian scope pekerjaan |
 
 ---
+
+@lisence nya belum tau
