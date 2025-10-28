@@ -1,4 +1,4 @@
-# Shadow Boxing — Game Boxing Interactive Mimepipe
+# Shadow Boxing — Game Boxing Interactive Mediapipe
 
 _“”_
 
