@@ -6,6 +6,10 @@ _“”_
 
 ## Deskripsi Proyek
 
+Shadow Boxing merupakan proyek filter interaktif berbasis multimedia yang menggabungkan computer vision, audio processing, dan video processing yang mensimulasikan pertandingan tinju melawan lawan virtual secara real-time. 
+
+Sistem menggunakan MediaPipe untuk mendeteksi elemen-elemen tubuh penting seperti wajah, kepalan tangan, dan posisi tangan. Dari deteksi ini, aplikasi mampu mengenali gerakan menyerang (pukulan) dan bertahan (menutup wajah). Setiap aksi akan memicu efek visual (seperti efek “babak belur” pada wajah) serta efek suara (sound effects) sehingga menciptakan pengalaman bermain yang interaktif.
+
 ---
 
 ## Anggota Tim
