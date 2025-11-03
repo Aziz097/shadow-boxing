@@ -1,30 +1,16 @@
 # Shadow Boxing - Interactive Boxing Game# Shadow Boxing — Game Boxing Interactive MediaPipe# Shadow Boxing — Game Boxing Interactive Mediapipe
 
-
-
 Game tinju interaktif yang mensimulasikan pertandingan real-time melawan AI menggunakan deteksi gerakan MediaPipe._"Fight Your Virtual Opponent with Real Punches!"\_\_“”_
-
-
 
 ---![Status](https://img.shields.io/badge/status-active-success.svg)---
 
-
-
 ## Deskripsi Proyek![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
-
-
 
 Shadow Boxing adalah aplikasi multimedia interaktif yang menggabungkan computer vision, audio processing, dan video processing. Sistem mendeteksi wajah, kepalan tangan, dan posisi tangan untuk mengenali gerakan menyerang (pukulan) dan bertahan (blocking). Setiap aksi memicu efek visual dan audio untuk pengalaman bermain yang responsif.![MediaPipe](https://img.shields.io/badge/MediaPipe-0.10.14-orange.svg)## Deskripsi Proyek
 
-
-
 ------Shadow Boxing merupakan proyek filter interaktif berbasis multimedia yang menggabungkan computer vision, audio processing, dan video processing yang mensimulasikan pertandingan tinju melawan lawan virtual secara real-time.
 
-
-
 ## Fitur Sistem## 🎮 Deskripsi ProyekSistem menggunakan MediaPipe untuk mendeteksi elemen-elemen tubuh penting seperti wajah, kepalan tangan, dan posisi tangan. Dari deteksi ini, aplikasi mampu mengenali gerakan menyerang (pukulan) dan bertahan (menutup wajah). Setiap aksi akan memicu efek visual (seperti efek “babak belur” pada wajah) serta efek suara (sound effects) sehingga menciptakan pengalaman bermain yang interaktif.
-
-
 
 ### Player System (Aziz Kurniawan)**Shadow Boxing** adalah game tinju interaktif yang mensimulasikan pertandingan tinju real-time melawan lawan virtual (AI). Pemain menyerang dengan gerakan pukulan ke kamera dan bertahan dengan menutup wajah menggunakan tangan. ---
 
@@ -51,8 +37,6 @@ Shadow Boxing adalah aplikasi multimedia interaktif yang menggabungkan computer 
 - Adaptive AI: Penyesuaian strategi berdasarkan pola bermain player
 
 - Attack Patterns: CENTER, LEFT, RIGHT attack types- **Fist Detection**: Deteksi kepalan tangan dengan kombinasi sudut dan jarak| Muhammad Yusuf | 122140193 | [@muhamyusuf](https://github.com/muhamyusuf) |
-
-
 
 ### Game System (Harisya Miranti)- **Defense System**: Deteksi blocking dengan posisi tangan di depan wajah
 
@@ -106,23 +90,21 @@ Shadow Boxing adalah aplikasi multimedia interaktif yang menggabungkan computer 
 
 - **Visual Effects**:
 
-## Instalasi  - Telegraph warnings dengan pulse effect
+## Instalasi - Telegraph warnings dengan pulse effect
 
-  - HP bars dengan color gradient
+- HP bars dengan color gradient
 
-### Prerequisites  - Stamina bar untuk enemy
+### Prerequisites - Stamina bar untuk enemy
 
-- Python 3.8+  - Damage indicators
+- Python 3.8+ - Damage indicators
 
-- Webcam  - Motion trails untuk punch effects
+- Webcam - Motion trails untuk punch effects
 
-- Windows / macOS / Linux  - Hit flash effects
+- Windows / macOS / Linux - Hit flash effects
 
   - Combo indicators
 
 ### Setup- **Sound Manager**: Audio feedback untuk punch, hit, block events
-
-
 
 ```bash---
 
@@ -224,8 +206,6 @@ shadow-boxing/5. **Win**: Kurangi HP enemy hingga 0 atau menang poin di akhir ro
 
 - **Pygame**: Audio playback- OS: Windows / macOS / Linux
 
-
-
 ### Detection Systems### Langkah Instalasi
 
 - Hand Detection: 21 landmarks per hand, 30+ FPS tracking
@@ -234,7 +214,7 @@ shadow-boxing/5. **Win**: Kurangi HP enemy hingga 0 atau menang poin di akhir ro
 
 - Pose Detection: Body landmarks sebagai fallback
 
-```bash
+````bash
 
 ### Enemy AI Algorithmgit clone https://github.com/Aziz097/shadow-boxing.git
 
@@ -242,17 +222,17 @@ cd shadow-boxing
 
 State Machine:```
 
-```
+````
 
 IDLE → TELEGRAPH → ATTACKING → RECOVERING → IDLE2. **Install Dependencies**
 
-```
+````
 
 ```bash
 
 Adaptive Learning: Menyesuaikan agresivitas dan feint chance berdasarkan defense rate player.pip install -r requirements.txt
 
-```
+````
 
 ---
 
@@ -260,7 +240,7 @@ Adaptive Learning: Menyesuaikan agresivitas dan feint chance berdasarkan defense
 
 ## Anggota Tim
 
-```bash
+````bash
 
 | Nama            | NIM       | GitHub                                       | Tanggung Jawab |python main.py
 
@@ -276,67 +256,67 @@ Adaptive Learning: Menyesuaikan agresivitas dan feint chance berdasarkan defense
 
 ---
 
-```
+````
 
 ## Laporan Progressshadow-boxing/
 
-├── main.py                 # Main game loop & integration
+├── main.py # Main game loop & integration
 
-| Tanggal    | Kegiatan                             | Progress                                                    |├── utils.py                # Helper functions
+| Tanggal | Kegiatan | Progress |├── utils.py # Helper functions
 
-| ---------- | ------------------------------------ | ----------------------------------------------------------- |├── requirements.txt        # Python dependencies
+| ---------- | ------------------------------------ | ----------------------------------------------------------- |├── requirements.txt # Python dependencies
 
-| 10/28/2025 | Setup repository & pembagian tugas   | Inisialisasi project dan koordinasi tim                     |├── README.md              # Documentation
+| 10/28/2025 | Setup repository & pembagian tugas | Inisialisasi project dan koordinasi tim |├── README.md # Documentation
 
-| 11/03/2025 | Enhanced Enemy AI System             | Telegraph, difficulty, combo, stamina, adaptive AI          |│
+| 11/03/2025 | Enhanced Enemy AI System | Telegraph, difficulty, combo, stamina, adaptive AI |│
 
-| 11/03/2025 | Game State & Round Manager           | HP system, scoring, round management                        |├── player/                # Player detection modules (Aziz)
+| 11/03/2025 | Game State & Round Manager | HP system, scoring, round management |├── player/ # Player detection modules (Aziz)
 
-| 11/03/2025 | Visual & Sound Effects               | Complete VFX dan audio integration                          |│   ├── __init__.py
+| 11/03/2025 | Visual & Sound Effects | Complete VFX dan audio integration |│ ├── **init**.py
 
-│   ├── fist_detector.py   # Fist detection algorithm
+│ ├── fist_detector.py # Fist detection algorithm
 
----│   ├── punch_detector.py  # Punch detection with velocity
+---│ ├── punch_detector.py # Punch detection with velocity
 
-│   └── defense_detector.py # Defense/blocking detection
+│ └── defense_detector.py # Defense/blocking detection
 
 ## Referensi│
 
-├── enemy/                 # Enemy AI modules (Ucup)
+├── enemy/ # Enemy AI modules (Ucup)
 
-- [Thailand Boxing TikTok](https://www.tiktok.com/@thailandboxing6/video/7370984266391489808)│   ├── __init__.py
+- [Thailand Boxing TikTok](https://www.tiktok.com/@thailandboxing6/video/7370984266391489808)│ ├── **init**.py
 
-- [Boxing Simulator LensList](https://lenslist.co/boxing-simulator)│   ├── enemy_hit_tester.py      # Original enemy system
+- [Boxing Simulator LensList](https://lenslist.co/boxing-simulator)│ ├── enemy_hit_tester.py # Original enemy system
 
-│   └── enhanced_enemy_ai.py     # Enhanced AI with new features
+│ └── enhanced_enemy_ai.py # Enhanced AI with new features
 
 ---│
 
-├── game/                  # Game systems (Ica)
+├── game/ # Game systems (Ica)
 
-## Known Issues & Future Plans│   ├── __init__.py
+## Known Issues & Future Plans│ ├── **init**.py
 
-│   ├── game_state.py      # HP, damage, scoring system
+│ ├── game_state.py # HP, damage, scoring system
 
-### Limitations│   ├── round_manager.py   # Round & timing management
+### Limitations│ ├── round_manager.py # Round & timing management
 
-- Sound files untuk hit, block, bell belum tersedia│   ├── sound_manager.py   # Audio system
+- Sound files untuk hit, block, bell belum tersedia│ ├── sound_manager.py # Audio system
 
-- Punch hit detection perlu peningkatan akurasi│   └── visual_effects.py  # VFX rendering
+- Punch hit detection perlu peningkatan akurasi│ └── visual_effects.py # VFX rendering
 
 - Performa bergantung pada kondisi pencahayaan│
 
-└── assets/               # Game assets
+└── assets/ # Game assets
 
-### Planned Features    ├── sfx/              # Sound effects
+### Planned Features ├── sfx/ # Sound effects
 
-- Sound effects lengkap    │   └── strongpunch.mp3
+- Sound effects lengkap │ └── strongpunch.mp3
 
-- Multiplayer mode    └── vfx/              # Visual effects
+- Multiplayer mode └── vfx/ # Visual effects
 
-- Training mode        ├── bruised_face.py
+- Training mode ├── bruised_face.py
 
-- Leaderboard system        └── pow.png
+- Leaderboard system └── pow.png
 
 - Additional characters```
 
@@ -362,22 +342,17 @@ License belum ditentukan.
 
 ## Contact- **Pygame**: Audio playback
 
-
-
 - Aziz Kurniawan: [@Aziz097](https://github.com/Aziz097)### Detection Systems
 
 - Muhammad Yusuf: [@muhamyusuf](https://github.com/muhamyusuf)
 
 - Harisya Miranti: [@harisya14](https://github.com/harisya14)#### Hand Detection
 
-
-
 ---- Uses MediaPipe Hands for landmark detection
 
 - 21 hand landmarks per hand
 
 **Shadow Boxing Team - Sistem Multimedia Project**- Real-time tracking at 30+ FPS
-
 
 #### Face Detection
 
