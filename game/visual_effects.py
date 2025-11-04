@@ -17,6 +17,10 @@ class VisualEffects:
         self.hit_flash_time = 0  # Time of last hit for flash effect
         self.hit_flash_duration = 0.1
         
+        # Round start notification
+        self.round_start_notification = None  # {'time': float, 'text': str}
+        self.notification_duration = 2.0  # seconds
+        
         # Modern soft color palette
         self.colors = {
             'player': (120, 255, 120),      # Soft green
@@ -491,5 +495,65 @@ class VisualEffects:
         x = (w - text_w) // 2
         y = h // 2 + 120
         cv2.putText(frame, restart_text, (x, y), font, 0.8, (255, 255, 255), 2)
+        
+        return frame
+    
+    def show_round_start(self, round_number):
+        """Trigger round start notification"""
+        self.round_start_notification = {
+            'time': time.time(),
+            'text': f"ROUND {round_number} START!"
+        }
+    
+    def draw_round_notification(self, frame, current_time):
+        """Draw round start notification banner"""
+        if not self.round_start_notification:
+            return frame
+        
+        # Check if notification expired
+        elapsed = current_time - self.round_start_notification['time']
+        if elapsed > self.notification_duration:
+            self.round_start_notification = None
+            return frame
+        
+        h, w = frame.shape[:2]
+        
+        # Animation: slide in from top
+        progress = min(1.0, elapsed / 0.3)  # 0.3s slide animation
+        fade_out = 1.0 if elapsed < (self.notification_duration - 0.5) else (self.notification_duration - elapsed) * 2
+        alpha = min(progress, fade_out)
+        
+        # Panel dimensions
+        panel_width = 600
+        panel_height = 100
+        px = (w - panel_width) // 2
+        py = int(h * 0.3 - 50 + (1 - progress) * -100)  # Slide from top
+        radius = 20
+        
+        # Background
+        overlay = frame.copy()
+        bg_color = self.colors['accent']
+        self.draw_rounded_rectangle(overlay, px, py, px + panel_width, py + panel_height,
+                                    radius, bg_color, -1)
+        cv2.addWeighted(overlay, alpha * 0.95, frame, 1 - alpha * 0.95, 0, frame)
+        
+        # Border glow
+        for i in range(3):
+            self.draw_rounded_rectangle(frame, px - i*2, py - i*2, 
+                                        px + panel_width + i*2, py + panel_height + i*2,
+                                        radius + i*2, bg_color, 2)
+        
+        # Text
+        text = self.round_start_notification['text']
+        (tw, th), _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 2.5, 5)
+        tx = px + (panel_width - tw) // 2
+        ty = py + (panel_height + th) // 2
+        
+        # Shadow
+        cv2.putText(frame, text, (tx + 4, ty + 4), cv2.FONT_HERSHEY_SIMPLEX,
+                   2.5, (0, 0, 0), 7)
+        # Main text
+        cv2.putText(frame, text, (tx, ty), cv2.FONT_HERSHEY_SIMPLEX,
+                   2.5, self.colors['text'], 5)
         
         return frame

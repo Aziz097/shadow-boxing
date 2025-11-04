@@ -149,6 +149,10 @@ class ShadowBoxingGame:
         self.match_over_announced = False
         self.last_round_summary = None
         
+        # Track previous round state for detecting changes
+        self.prev_round_state = "READY"
+        self.prev_round_number = 1
+        
         # Defense tracking
         self.last_defense_time = 0
         self.defense_memory = 0.5
@@ -243,10 +247,19 @@ class ShadowBoxingGame:
             pose_landmarks = pose_results.pose_landmarks if pose_results.pose_landmarks else None
             
             # === GAME LOGIC ===
+            # Always update round manager (including during REST)
+            self.round_manager.update(current_time)
+            
+            # Detect round state changes (for notifications)
+            if (self.round_manager.state == "FIGHTING" and 
+                (self.prev_round_state != "FIGHTING" or self.prev_round_number != self.round_manager.current_round)):
+                # Round just started!
+                self.vfx.show_round_start(self.round_manager.current_round)
+            
+            self.prev_round_state = self.round_manager.state
+            self.prev_round_number = self.round_manager.current_round
+            
             if self.round_manager.is_fighting() and not self.game_state.game_over:
-                # Update round timer
-                self.round_manager.update(current_time)
-                
                 # Update enemy AI
                 self.enemy.update(current_time, w, h, face_bbox, pose_landmarks, self.game_state)
                 
@@ -335,6 +348,9 @@ class ShadowBoxingGame:
                 frame = self.vfx.draw_hit_flash(frame, current_time)
             
             frame = self.vfx.draw_game_over(frame, self.game_state)
+            
+            # Draw round start notification (on top of everything)
+            frame = self.vfx.draw_round_notification(frame, current_time)
             
             # Draw face bbox (debug)
             if face_bbox:
