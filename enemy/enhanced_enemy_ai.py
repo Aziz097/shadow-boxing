@@ -68,7 +68,7 @@ class EnemyAI:
             self.telegraph_duration = 0.8  # longer warning
             self.idle_time_range = (2.0, 3.5)  # less aggressive
             self.combo_chance = 0.1  # 10% combo
-            self.vulnerability_duration = 1.2
+            self.vulnerability_duration = 2.0  # INCREASED: more time to counter
             
         elif self.difficulty == "HARD":
             self.attack_duration = 0.25  # fast!
@@ -76,7 +76,7 @@ class EnemyAI:
             self.telegraph_duration = 0.3  # short warning
             self.idle_time_range = (0.6, 1.2)  # very aggressive
             self.combo_chance = 0.4  # 40% combo
-            self.vulnerability_duration = 0.5
+            self.vulnerability_duration = 0.8  # INCREASED: harder but fair
             
         else:  # MEDIUM (default)
             self.attack_duration = 0.4
@@ -84,7 +84,7 @@ class EnemyAI:
             self.telegraph_duration = 0.5
             self.idle_time_range = (1.0, 2.0)  # more aggressive for 60s rounds
             self.combo_chance = 0.25  # 25% combo
-            self.vulnerability_duration = 0.8
+            self.vulnerability_duration = 1.5  # INCREASED: more time to counter punch
     
     def get_attack_type(self):
         """Determine attack type"""
@@ -211,6 +211,7 @@ class EnemyAI:
                     self.last_action_time = current_time
                     self.vulnerable = True
                     self.vulnerability_start_time = current_time
+                    print(f">>> ENEMY NOW VULNERABLE! Duration: {self.vulnerability_duration}s")  # DEBUG
         
         elif self.state == "COMBO_DELAY":
             if current_time - self.last_action_time > self.combo_delay:
@@ -222,10 +223,12 @@ class EnemyAI:
             if current_time - self.last_action_time > self.recover_duration:
                 self.state = "IDLE"
                 self.vulnerable = False
+                print(">>> Enemy recovered - no longer vulnerable")  # DEBUG
             
             # Update vulnerability
             if self.vulnerable and current_time - self.vulnerability_start_time > self.vulnerability_duration:
                 self.vulnerable = False
+                print(">>> Vulnerability window closed")  # DEBUG
     
     def _target_from_face(self, face_bbox, atk_type, w, h):
         """Calculate target position from face bbox"""

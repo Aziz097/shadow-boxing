@@ -124,9 +124,14 @@ def check_player_punch_hit(hand_pos, enemy_ai, frame_width, frame_height):
     enemy_head_y = int(frame_height * 0.28)
     dist = np.sqrt((x - enemy_head_x)**2 + (y - enemy_head_y)**2)
     
-    # Slightly forgiving radius to account for detection noise
-    hit_radius = max(frame_width, frame_height) * 0.08
-    return dist < hit_radius  # hit radius
+    # More forgiving radius - increased from 0.08 to 0.12
+    hit_radius = max(frame_width, frame_height) * 0.12
+    
+    is_hit = dist < hit_radius
+    if is_hit:
+        print(f"PLAYER HIT ENEMY! Distance: {dist:.1f}, Radius: {hit_radius:.1f}")
+    
+    return is_hit
 
 # === Main Game Class ===
 class ShadowBoxingGame:
@@ -188,7 +193,8 @@ class ShadowBoxingGame:
                 velocity = (hand_pos - self.prev_hand_pos) / delta_time
                 speed = np.linalg.norm(velocity)
                 
-                if speed > 800:  # velocity threshold
+                # Lowered threshold from 800 to 450 for easier punch detection
+                if speed > 450:  # velocity threshold
                     face_center = np.array([w // 2, h // 2])
                     to_face = face_center - hand_pos
                     
@@ -202,6 +208,7 @@ class ShadowBoxingGame:
                                 self.last_punch_time = current_time
                                 self.prev_hand_pos = hand_pos
                                 self.prev_time = current_time
+                                print(f"PUNCH DETECTED! Speed: {speed:.1f}")  # Debug
                                 return True
         
         self.prev_hand_pos = hand_pos
@@ -272,6 +279,11 @@ class ShadowBoxingGame:
                                 
                                 # Check if hit vulnerable enemy
                                 hand_pos = get_hand_center(hand_lm, w, h)
+                                
+                                # Debug vulnerability
+                                if not self.enemy.is_vulnerable():
+                                    print(f"Enemy NOT vulnerable - can't hit yet!")
+                                
                                 if check_player_punch_hit(hand_pos, self.enemy, w, h):
                                     if self.game_state.player_hit_enemy(current_time):
                                         self.sound.play_punch()

@@ -300,16 +300,28 @@ class VisualEffects:
         
         h, w = frame.shape[:2]
         
-        text = "*** COUNTER ATTACK! ***"
+        # MAIN TEXT - bigger and more visible
+        text = "*** HIT NOW! ***"
         font = cv2.FONT_HERSHEY_SIMPLEX
         
-        (text_w, text_h), _ = cv2.getTextSize(text, font, 1.0, 3)
+        (text_w, text_h), _ = cv2.getTextSize(text, font, 2.0, 4)
         x = (w - text_w) // 2
-        y = h - 100
+        y = int(h * 0.5)  # center of screen
         
-        # Blinking effect
-        if int(time.time() * 5) % 2 == 0:
-            cv2.putText(frame, text, (x, y), font, 1.0, (0, 255, 0), 3)
+        # Blinking effect - faster blink for urgency
+        if int(time.time() * 8) % 2 == 0:
+            # Black outline
+            cv2.putText(frame, text, (x, y), font, 2.0, (0, 0, 0), 8)
+            # Green text
+            cv2.putText(frame, text, (x, y), font, 2.0, (0, 255, 0), 4)
+        
+        # Add subtitle
+        subtitle = "PUNCH THE ENEMY!"
+        (sub_w, sub_h), _ = cv2.getTextSize(subtitle, font, 1.0, 2)
+        sub_x = (w - sub_w) // 2
+        sub_y = y + 60
+        cv2.putText(frame, subtitle, (sub_x, sub_y), font, 1.0, (0, 0, 0), 4)
+        cv2.putText(frame, subtitle, (sub_x, sub_y), font, 1.0, (0, 255, 0), 2)
         
         return frame
     
