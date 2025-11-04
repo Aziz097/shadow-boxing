@@ -358,4 +358,11 @@ class VisualEffects:
         color = (0, 255, 0) if game_state.winner == "PLAYER" else (0, 0, 255)
         cv2.putText(frame, winner_text, (x, y), font, 2.0, color, 5)
         
+        # Restart instruction
+        restart_text = "Press SPACE to restart"
+        (text_w, text_h), _ = cv2.getTextSize(restart_text, font, 0.8, 2)
+        x = (w - text_w) // 2
+        y = h // 2 + 120
+        cv2.putText(frame, restart_text, (x, y), font, 0.8, (255, 255, 255), 2)
+        
         return frame

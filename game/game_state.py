@@ -15,9 +15,9 @@ class GameState:
         self.player_hp = player_max_hp
         self.enemy_hp = enemy_max_hp
         
-        # Damage values
-        self.enemy_damage = 10  # damage per enemy hit
-        self.player_damage = 15  # damage per player punch
+        # Damage values (increased for 60s rounds)
+        self.enemy_damage = 20  # damage per enemy hit
+        self.player_damage = 25  # damage per player punch
         
         # Score tracking
         self.player_punches_landed = 0

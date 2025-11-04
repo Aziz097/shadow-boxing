@@ -8,12 +8,18 @@ Controls:
 - D: Change difficulty (EASY/MEDIUM/HARD)
 - S: Toggle sound
 """
-import cv2
-import mediapipe as mp
-import numpy as np
-import time
-import sys
 import os
+import sys
+import time
+
+import cv2
+import numpy as np
+
+# Reduce verbose logs from MediaPipe/TFLite before importing mediapipe
+os.environ["GLOG_minloglevel"] = "2"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+
+import mediapipe as mp
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -76,29 +82,37 @@ def is_hit(enemy_hand_pos, enemy_atk_type, face_bbox, pose_landmarks, w, h):
     
     ex, ey = enemy_hand_pos
     
+    # Expanded hit detection radius for better accuracy
+    hit_radius = 80  # pixels
+    
     if face_bbox:
         fx1, fy1, fx2, fy2 = face_bbox
+        # Expand bbox slightly for more forgiving detection
+        fx1 -= 20
+        fy1 -= 20
+        fx2 += 20
+        fy2 += 20
         return fx1 < ex < fx2 and fy1 < ey < fy2
     
     elif pose_landmarks:
         if enemy_atk_type == "LEFT":
-            target_lm = pose_landmarks.landmark[3]
+            target_lm = pose_landmarks.landmark[2]  # left eye
         elif enemy_atk_type == "RIGHT":
-            target_lm = pose_landmarks.landmark[4]
+            target_lm = pose_landmarks.landmark[5]  # right eye
         else:
-            target_lm = pose_landmarks.landmark[0]
+            target_lm = pose_landmarks.landmark[0]  # nose
         
         if target_lm.visibility > 0.5:
             tx = int(target_lm.x * w)
             ty = int(target_lm.y * h)
             dist = np.sqrt((ex - tx)**2 + (ey - ty)**2)
-            return dist < 50
+            return dist < hit_radius
     
     return False
 
-def check_player_punch_hit(hand_pos, enemy_ai):
+def check_player_punch_hit(hand_pos, enemy_ai, frame_width, frame_height):
     """Check if player punch hit vulnerable enemy"""
-    if not enemy_ai.is_vulnerable() or not hand_pos:
+    if not enemy_ai.is_vulnerable() or hand_pos is None:
         return False
     
     # Simple collision check - punch hit if hand near center screen
@@ -106,10 +120,13 @@ def check_player_punch_hit(hand_pos, enemy_ai):
     x, y = hand_pos
     
     # Enemy head area (top-center of screen)
-    enemy_head_x, enemy_head_y = 640, 200  # center-ish
+    enemy_head_x = frame_width // 2
+    enemy_head_y = int(frame_height * 0.28)
     dist = np.sqrt((x - enemy_head_x)**2 + (y - enemy_head_y)**2)
     
-    return dist < 100  # hit radius
+    # Slightly forgiving radius to account for detection noise
+    hit_radius = max(frame_width, frame_height) * 0.08
+    return dist < hit_radius  # hit radius
 
 # === Main Game Class ===
 class ShadowBoxingGame:
@@ -120,10 +137,12 @@ class ShadowBoxingGame:
         # Game components
         self.sound = SoundManager()
         self.game_state = GameState()
-        self.round_manager = RoundManager(total_rounds=3, round_duration=20, rest_duration=5)
+        self.round_manager = RoundManager(total_rounds=3, round_duration=60, rest_duration=10)
         self.vfx = VisualEffects()
         self.difficulty = "MEDIUM"
         self.enemy = EnemyAI(difficulty=self.difficulty)
+        self.match_over_announced = False
+        self.last_round_summary = None
         
         # Defense tracking
         self.last_defense_time = 0
@@ -142,7 +161,7 @@ class ShadowBoxingGame:
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
         
-        print("🥊 Shadow Boxing Game Initialized!")
+        print("\n=== Shadow Boxing Game Initialized ===")
         print(f"Difficulty: {self.difficulty}")
         print("Press SPACE to start first round")
     
@@ -191,7 +210,7 @@ class ShadowBoxingGame:
     
     def run(self):
         """Main game loop"""
-        print("\n🎮 Game Started!")
+        print("\nGame Started!")
         print("Controls: SPACE=Start/Continue, Q=Quit, D=Difficulty, S=Toggle Sound\n")
         
         while self.cap.isOpened():
@@ -253,12 +272,12 @@ class ShadowBoxingGame:
                                 
                                 # Check if hit vulnerable enemy
                                 hand_pos = get_hand_center(hand_lm, w, h)
-                                if check_player_punch_hit(hand_pos, self.enemy):
+                                if check_player_punch_hit(hand_pos, self.enemy, w, h):
                                     if self.game_state.player_hit_enemy(current_time):
                                         self.sound.play_punch()
                                         punch_landed = True
                                         self.enemy.take_damage()
-                                        print(f"💥 Player hit! Enemy HP: {self.game_state.enemy_hp}")
+                                        print(f"Player hit! Enemy HP: {self.game_state.enemy_hp}")
                 
                 # Fist memory
                 if not fist_detected and (current_time - self.last_fist_time < self.fist_memory):
@@ -271,12 +290,12 @@ class ShadowBoxingGame:
                         if defending:
                             self.game_state.player_blocked()
                             self.sound.play_block()
-                            print("🛡️ Blocked!")
+                            print("Blocked!")
                         else:
                             if self.game_state.enemy_hit_player(current_time):
                                 self.sound.play_hit()
                                 self.vfx.trigger_hit_flash()
-                                print(f"💔 Hit taken! Player HP: {self.game_state.player_hp}")
+                                print(f"Hit taken! Player HP: {self.game_state.player_hp}")
                 
                 # Check round end
                 if self.round_manager.get_remaining_time(current_time) <= 0:
@@ -285,7 +304,7 @@ class ShadowBoxingGame:
                     enemy_score = self.game_state.enemy_hits_landed
                     winner = self.round_manager.get_round_winner(player_score, enemy_score)
                     self.round_manager.end_round(winner)
-                    print(f"\n⏰ Round {self.round_manager.current_round} Over!")
+                    print(f"\nRound {self.round_manager.current_round} Over!")
                     print(f"Winner: {winner}")
                     print(f"Score - Player: {player_score}, Enemy: {enemy_score}\n")
             
@@ -332,23 +351,25 @@ class ShadowBoxingGame:
                     self.round_manager.start_round()
                     self.game_state.reset()
                     self.enemy = EnemyAI(difficulty=self.difficulty)
-                    print(f"🔔 Round {self.round_manager.current_round} START!")
-                elif self.round_manager.is_finished():
-                    # Restart game
+                    print(f"Round {self.round_manager.current_round} START!")
+                elif self.round_manager.is_finished() or self.game_state.game_over:
+                    # Restart game (match finished or KO)
                     self.round_manager.reset()
                     self.game_state.reset()
                     self.enemy = EnemyAI(difficulty=self.difficulty)
-                    print("\n🔄 New Game Started!\n")
+                    print("\n=== New Game Started! ===")
+                    print(f"Difficulty: {self.difficulty}")
+                    print("Press SPACE to start first round\n")
             elif key == ord('d'):
                 self.change_difficulty()
             elif key == ord('s'):
                 enabled = self.sound.toggle_sound()
-                print(f"🔊 Sound: {'ON' if enabled else 'OFF'}")
+                print(f"Sound: {'ON' if enabled else 'OFF'}")
         
         # Cleanup
         self.cap.release()
         cv2.destroyAllWindows()
-        print("\n👋 Game Over! Thanks for playing!")
+        print("\nGame Over! Thanks for playing!")
 
 # === Entry Point ===
 if __name__ == "__main__":
@@ -356,8 +377,8 @@ if __name__ == "__main__":
         game = ShadowBoxingGame()
         game.run()
     except KeyboardInterrupt:
-        print("\n\n⚠️ Game interrupted by user")
+        print("\n\nGame interrupted by user")
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\nError: {e}")
         import traceback
         traceback.print_exc()

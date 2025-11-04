@@ -7,14 +7,14 @@ import time
 class RoundManager:
     """Manages rounds, timing, and rest periods"""
     
-    def __init__(self, total_rounds=3, round_duration=20, rest_duration=5):
+    def __init__(self, total_rounds=3, round_duration=60, rest_duration=10):
         """
         Initialize Round Manager
         
         Args:
             total_rounds: Total number of rounds (default: 3)
-            round_duration: Duration of each round in seconds (default: 20)
-            rest_duration: Rest time between rounds in seconds (default: 5)
+            round_duration: Duration of each round in seconds (default: 60)
+            rest_duration: Rest time between rounds in seconds (default: 10)
         """
         self.total_rounds = total_rounds
         self.round_duration = round_duration
@@ -76,12 +76,13 @@ class RoundManager:
             return max(0, remaining)
         return 0
     
-    def end_round(self, winner):
+    def end_round(self, winner, force_finish=False):
         """
         End current round and record winner
         
         Args:
             winner: 'PLAYER', 'ENEMY', or 'DRAW'
+            force_finish: If True, end match immediately (KO/forfeit)
         """
         self.round_winners.append(winner)
         
@@ -91,7 +92,9 @@ class RoundManager:
             self.enemy_round_wins += 1
         
         # Transition to rest or finish
-        if self.current_round < self.total_rounds:
+        if force_finish:
+            self.state = "FINISHED"
+        elif self.current_round < self.total_rounds:
             self.state = "REST"
             self.rest_start_time = time.time()
         else:

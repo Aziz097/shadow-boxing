@@ -66,7 +66,7 @@ class EnemyAI:
             self.attack_duration = 0.6  # slower
             self.recover_duration = 1.0  # longer recovery
             self.telegraph_duration = 0.8  # longer warning
-            self.idle_time_range = (2.5, 4.0)  # less aggressive
+            self.idle_time_range = (2.0, 3.5)  # less aggressive
             self.combo_chance = 0.1  # 10% combo
             self.vulnerability_duration = 1.2
             
@@ -74,7 +74,7 @@ class EnemyAI:
             self.attack_duration = 0.25  # fast!
             self.recover_duration = 0.4  # quick recovery
             self.telegraph_duration = 0.3  # short warning
-            self.idle_time_range = (0.8, 1.5)  # very aggressive
+            self.idle_time_range = (0.6, 1.2)  # very aggressive
             self.combo_chance = 0.4  # 40% combo
             self.vulnerability_duration = 0.5
             
@@ -82,7 +82,7 @@ class EnemyAI:
             self.attack_duration = 0.4
             self.recover_duration = 0.6
             self.telegraph_duration = 0.5
-            self.idle_time_range = (1.5, 2.5)
+            self.idle_time_range = (1.0, 2.0)  # more aggressive for 60s rounds
             self.combo_chance = 0.25  # 25% combo
             self.vulnerability_duration = 0.8
     

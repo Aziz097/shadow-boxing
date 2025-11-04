@@ -129,32 +129,40 @@ def is_defending(hand_landmarks, face_bbox, pose_landmarks, w, h):
 def is_hit(enemy_hand_pos, enemy_atk_type, face_bbox, pose_landmarks, w, h):
     """
     Hit valid jika:
-    - Face ada → tangan lawan di dalam bbox
+    - Face ada → tangan lawan di dalam bbox (expanded)
     - Face tidak ada, tapi pose ada → tangan lawan dekat target landmark
     """
     if not enemy_hand_pos:
         return False
 
     ex, ey = enemy_hand_pos
+    
+    # Expanded hit detection radius for better accuracy
+    hit_radius = 80  # pixels
 
     if face_bbox:
         fx1, fy1, fx2, fy2 = face_bbox
+        # Expand bbox slightly for more forgiving detection
+        fx1 -= 20
+        fy1 -= 20
+        fx2 += 20
+        fy2 += 20
         return fx1 < ex < fx2 and fy1 < ey < fy2
 
     elif pose_landmarks:
         # Dapatkan target landmark berdasarkan tipe serangan
         if enemy_atk_type == "LEFT":
-            target_lm = pose_landmarks.landmark[3]
+            target_lm = pose_landmarks.landmark[2]  # left eye
         elif enemy_atk_type == "RIGHT":
-            target_lm = pose_landmarks.landmark[4]
+            target_lm = pose_landmarks.landmark[5]  # right eye
         else:
-            target_lm = pose_landmarks.landmark[0]
+            target_lm = pose_landmarks.landmark[0]  # nose
 
         if target_lm.visibility > 0.5:
             tx = int(target_lm.x * w)
             ty = int(target_lm.y * h)
             dist = np.sqrt((ex - tx)**2 + (ey - ty)**2)
-            return dist < 50  # radius 50 pixel
+            return dist < hit_radius
 
     return False
 
