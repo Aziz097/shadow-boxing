@@ -2,7 +2,7 @@
 Game State Manager untuk Shadow Boxing
 Mengelola HP, damage, score, dan status game
 """
-import time
+# import time
 
 class GameState:
     """Manages game state including HP, damage, and scoring"""
