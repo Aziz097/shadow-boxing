@@ -56,9 +56,11 @@ class RoundManager:
             elapsed = current_time - self.rest_start_time
             
             if elapsed >= self.rest_duration:
-                # Rest period over, prepare next round
+                # Rest period over, auto-start next round
                 self.current_round += 1
-                self.state = "READY"
+                self.state = "FIGHTING"
+                self.round_start_time = current_time
+                print(f"Round {self.current_round} START!")  # Auto-start message
     
     def get_remaining_time(self, current_time):
         """Get remaining time in current round"""

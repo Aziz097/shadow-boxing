@@ -1,6 +1,7 @@
 """
 Visual Effects Manager untuk Shadow Boxing
 Mengelola semua efek visual: telegraph warnings, motion trails, damage indicators, UI elements
+Modern UI with rounded corners and soft colors
 """
 import cv2
 import numpy as np
@@ -15,6 +16,40 @@ class VisualEffects:
         self.screen_shake = 0  # Screen shake intensity
         self.hit_flash_time = 0  # Time of last hit for flash effect
         self.hit_flash_duration = 0.1
+        
+        # Modern soft color palette
+        self.colors = {
+            'player': (120, 255, 120),      # Soft green
+            'enemy': (120, 120, 255),       # Soft red/pink
+            'warning': (100, 200, 255),     # Soft orange
+            'vulnerable': (120, 255, 200),  # Soft cyan
+            'bg_dark': (40, 40, 45),        # Dark background
+            'bg_light': (60, 60, 70),       # Light background
+            'text': (240, 240, 245),        # Soft white
+            'accent': (200, 150, 255),      # Soft purple
+        }
+    
+    def draw_rounded_rectangle(self, frame, x1, y1, x2, y2, radius, color, thickness=-1):
+        """Draw rectangle with rounded corners"""
+        # Create mask for rounded rectangle
+        if thickness == -1:  # Filled
+            cv2.rectangle(frame, (x1 + radius, y1), (x2 - radius, y2), color, -1)
+            cv2.rectangle(frame, (x1, y1 + radius), (x2, y2 - radius), color, -1)
+            cv2.circle(frame, (x1 + radius, y1 + radius), radius, color, -1)
+            cv2.circle(frame, (x2 - radius, y1 + radius), radius, color, -1)
+            cv2.circle(frame, (x1 + radius, y2 - radius), radius, color, -1)
+            cv2.circle(frame, (x2 - radius, y2 - radius), radius, color, -1)
+        else:  # Outline
+            # Draw lines
+            cv2.line(frame, (x1 + radius, y1), (x2 - radius, y1), color, thickness)
+            cv2.line(frame, (x1 + radius, y2), (x2 - radius, y2), color, thickness)
+            cv2.line(frame, (x1, y1 + radius), (x1, y2 - radius), color, thickness)
+            cv2.line(frame, (x2, y1 + radius), (x2, y2 - radius), color, thickness)
+            # Draw corners
+            cv2.ellipse(frame, (x1 + radius, y1 + radius), (radius, radius), 180, 0, 90, color, thickness)
+            cv2.ellipse(frame, (x2 - radius, y1 + radius), (radius, radius), 270, 0, 90, color, thickness)
+            cv2.ellipse(frame, (x1 + radius, y2 - radius), (radius, radius), 90, 0, 90, color, thickness)
+            cv2.ellipse(frame, (x2 - radius, y2 - radius), (radius, radius), 0, 0, 90, color, thickness)
         
     def draw_telegraph_warning(self, frame, enemy_ai, current_time):
         """
@@ -123,7 +158,7 @@ class VisualEffects:
     
     def draw_hp_bars(self, frame, game_state):
         """
-        Draw HP bars for player and enemy
+        Draw modern HP bars with rounded corners
         
         Args:
             frame: Video frame
@@ -131,36 +166,59 @@ class VisualEffects:
         """
         h, w = frame.shape[:2]
         
-        # Bar dimensions
-        bar_width = 300
-        bar_height = 30
-        margin = 20
+        # Bar dimensions - wider and thinner for modern look
+        bar_width = 350
+        bar_height = 25
+        margin = 30
+        radius = 12
         
         # Player HP (bottom left)
         player_hp_pct = game_state.get_player_hp_percentage()
-        self._draw_hp_bar(
-            frame,
-            x=margin,
-            y=h - margin - bar_height,
-            width=bar_width,
-            height=bar_height,
-            hp_percentage=player_hp_pct,
-            label="PLAYER",
-            color=(0, 255, 0)
-        )
+        px = margin
+        py = h - margin - bar_height - 40
+        
+        # Background
+        self.draw_rounded_rectangle(frame, px, py, px + bar_width, py + bar_height, 
+                                    radius, self.colors['bg_light'], -1)
+        
+        # HP fill
+        fill_width = int(bar_width * (player_hp_pct / 100))
+        if fill_width > 0:
+            self.draw_rounded_rectangle(frame, px + 2, py + 2, px + fill_width - 2, py + bar_height - 2,
+                                        radius - 2, self.colors['player'], -1)
+        
+        # Label
+        cv2.putText(frame, "YOU", (px, py - 10), cv2.FONT_HERSHEY_SIMPLEX, 
+                   0.6, self.colors['text'], 2)
+        # HP text
+        hp_text = f"{int(game_state.player_hp)}"
+        (tw, th), _ = cv2.getTextSize(hp_text, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
+        cv2.putText(frame, hp_text, (px + bar_width - tw, py - 10), 
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.6, self.colors['player'], 2)
         
         # Enemy HP (top right)
         enemy_hp_pct = game_state.get_enemy_hp_percentage()
-        self._draw_hp_bar(
-            frame,
-            x=w - margin - bar_width,
-            y=margin,
-            width=bar_width,
-            height=bar_height,
-            hp_percentage=enemy_hp_pct,
-            label="ENEMY",
-            color=(255, 0, 0)
-        )
+        ex = w - margin - bar_width
+        ey = margin + 40
+        
+        # Background
+        self.draw_rounded_rectangle(frame, ex, ey, ex + bar_width, ey + bar_height,
+                                    radius, self.colors['bg_light'], -1)
+        
+        # HP fill
+        fill_width = int(bar_width * (enemy_hp_pct / 100))
+        if fill_width > 0:
+            self.draw_rounded_rectangle(frame, ex + 2, ey + 2, ex + fill_width - 2, ey + bar_height - 2,
+                                        radius - 2, self.colors['enemy'], -1)
+        
+        # Label
+        cv2.putText(frame, "ENEMY", (ex, ey - 10), cv2.FONT_HERSHEY_SIMPLEX,
+                   0.6, self.colors['text'], 2)
+        # HP text
+        hp_text = f"{int(game_state.enemy_hp)}"
+        (tw, th), _ = cv2.getTextSize(hp_text, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
+        cv2.putText(frame, hp_text, (ex + bar_width - tw, ey - 10),
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.6, self.colors['enemy'], 2)
         
         return frame
     
@@ -218,27 +276,65 @@ class VisualEffects:
         return frame
     
     def draw_round_info(self, frame, round_manager, current_time):
-        """Draw round information"""
+        """Draw modern round information with score"""
         h, w = frame.shape[:2]
         
-        # Status text
-        status_text = round_manager.get_status_text(current_time)
-        font = cv2.FONT_HERSHEY_SIMPLEX
+        # Top center info panel
+        panel_width = 400
+        panel_height = 80
+        px = (w - panel_width) // 2
+        py = 15
+        radius = 15
         
-        # Position at top center
-        (text_w, text_h), _ = cv2.getTextSize(status_text, font, 1.0, 3)
-        x = (w - text_w) // 2
-        y = 40
+        # Semi-transparent background
+        overlay = frame.copy()
+        self.draw_rounded_rectangle(overlay, px, py, px + panel_width, py + panel_height,
+                                    radius, self.colors['bg_dark'], -1)
+        cv2.addWeighted(overlay, 0.85, frame, 0.15, 0, frame)
         
-        # Background box
-        padding = 10
-        cv2.rectangle(frame, 
-                     (x - padding, y - text_h - padding),
-                     (x + text_w + padding, y + padding),
-                     (0, 0, 0), -1)
+        # Round number
+        round_text = f"ROUND {round_manager.current_round}/{round_manager.total_rounds}"
+        (tw, th), _ = cv2.getTextSize(round_text, cv2.FONT_HERSHEY_SIMPLEX, 0.8, 2)
+        tx = px + (panel_width - tw) // 2
+        cv2.putText(frame, round_text, (tx, py + 30), cv2.FONT_HERSHEY_SIMPLEX,
+                   0.8, self.colors['accent'], 2)
         
-        # Text
-        cv2.putText(frame, status_text, (x, y), font, 1.0, (255, 255, 255), 3)
+        # Score display
+        score_text = f"{round_manager.player_round_wins}  -  {round_manager.enemy_round_wins}"
+        (tw, th), _ = cv2.getTextSize(score_text, cv2.FONT_HERSHEY_SIMPLEX, 1.2, 3)
+        tx = px + (panel_width - tw) // 2
+        cv2.putText(frame, score_text, (tx, py + 65), cv2.FONT_HERSHEY_SIMPLEX,
+                   1.2, self.colors['text'], 3)
+        
+        # Timer
+        if round_manager.state == "FIGHTING":
+            remaining = round_manager.get_remaining_time(current_time)
+            timer_text = f"{int(remaining)}s"
+            timer_color = self.colors['warning'] if remaining < 10 else self.colors['text']
+        elif round_manager.state == "REST":
+            remaining = round_manager.get_rest_remaining(current_time)
+            timer_text = f"REST: {int(remaining)}s"
+            timer_color = self.colors['vulnerable']
+        else:
+            timer_text = "READY"
+            timer_color = self.colors['text']
+            
+        # Timer background
+        timer_width = 100
+        timer_height = 30
+        timer_x = px + (panel_width - timer_width) // 2
+        timer_y = py + panel_height + 10
+        
+        overlay2 = frame.copy()
+        self.draw_rounded_rectangle(overlay2, timer_x, timer_y, timer_x + timer_width, timer_y + timer_height,
+                                    10, self.colors['bg_light'], -1)
+        cv2.addWeighted(overlay2, 0.9, frame, 0.1, 0, frame)
+        
+        (tw, th), _ = cv2.getTextSize(timer_text, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
+        tx = timer_x + (timer_width - tw) // 2
+        ty = timer_y + (timer_height + th) // 2
+        cv2.putText(frame, timer_text, (tx, ty), cv2.FONT_HERSHEY_SIMPLEX,
+                   0.6, timer_color, 2)
         
         return frame
     
@@ -294,34 +390,53 @@ class VisualEffects:
         return frame
     
     def draw_vulnerable_indicator(self, frame, enemy_ai):
-        """Draw indicator when enemy is vulnerable"""
+        """Draw modern vulnerable indicator with rounded panel"""
         if not enemy_ai.is_vulnerable():
             return frame
         
         h, w = frame.shape[:2]
         
-        # MAIN TEXT - bigger and more visible
-        text = "*** HIT NOW! ***"
-        font = cv2.FONT_HERSHEY_SIMPLEX
+        # Modern panel design
+        panel_width = 500
+        panel_height = 120
+        px = (w - panel_width) // 2
+        py = int(h * 0.45)
+        radius = 20
         
-        (text_w, text_h), _ = cv2.getTextSize(text, font, 2.0, 4)
-        x = (w - text_w) // 2
-        y = int(h * 0.5)  # center of screen
+        # Pulsing animation
+        pulse = abs(np.sin(time.time() * 6)) * 0.3 + 0.7
         
-        # Blinking effect - faster blink for urgency
-        if int(time.time() * 8) % 2 == 0:
-            # Black outline
-            cv2.putText(frame, text, (x, y), font, 2.0, (0, 0, 0), 8)
-            # Green text
-            cv2.putText(frame, text, (x, y), font, 2.0, (0, 255, 0), 4)
+        # Background with pulse
+        overlay = frame.copy()
+        bg_color = tuple([int(c * pulse) for c in self.colors['vulnerable']])
+        self.draw_rounded_rectangle(overlay, px, py, px + panel_width, py + panel_height,
+                                    radius, bg_color, -1)
+        cv2.addWeighted(overlay, 0.9, frame, 0.1, 0, frame)
         
-        # Add subtitle
-        subtitle = "PUNCH THE ENEMY!"
-        (sub_w, sub_h), _ = cv2.getTextSize(subtitle, font, 1.0, 2)
-        sub_x = (w - sub_w) // 2
-        sub_y = y + 60
-        cv2.putText(frame, subtitle, (sub_x, sub_y), font, 1.0, (0, 0, 0), 4)
-        cv2.putText(frame, subtitle, (sub_x, sub_y), font, 1.0, (0, 255, 0), 2)
+        # Border
+        self.draw_rounded_rectangle(frame, px, py, px + panel_width, py + panel_height,
+                                    radius, self.colors['vulnerable'], 3)
+        
+        # MAIN TEXT
+        text = "HIT NOW!"
+        (text_w, text_h), _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 2.2, 4)
+        tx = px + (panel_width - text_w) // 2
+        ty = py + 55
+        
+        # Shadow
+        cv2.putText(frame, text, (tx + 3, ty + 3), cv2.FONT_HERSHEY_SIMPLEX, 
+                   2.2, (0, 0, 0), 6)
+        # Main text
+        cv2.putText(frame, text, (tx, ty), cv2.FONT_HERSHEY_SIMPLEX,
+                   2.2, self.colors['text'], 4)
+        
+        # Subtitle
+        subtitle = "⚡ PUNCH THE ENEMY ⚡"
+        (sub_w, sub_h), _ = cv2.getTextSize(subtitle, cv2.FONT_HERSHEY_SIMPLEX, 0.8, 2)
+        sub_x = px + (panel_width - sub_w) // 2
+        sub_y = py + 95
+        cv2.putText(frame, subtitle, (sub_x, sub_y), cv2.FONT_HERSHEY_SIMPLEX,
+                   0.8, self.colors['text'], 2)
         
         return frame
     
