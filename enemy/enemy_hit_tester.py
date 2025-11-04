@@ -68,7 +68,7 @@ class EnemyAI:
         if atk_type == "LEFT":
             lm = pose_landmarks.landmark[3]  # left eye outer
         elif atk_type == "RIGHT":
-            lm = pose_landmarks.landmark[4]  # right eye outer
+            lm = pose_landmarks.landmark[6]  # right eye outer
         else:
             lm = pose_landmarks.landmark[0]  # nose
 
