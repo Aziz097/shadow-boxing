@@ -1,91 +1,79 @@
-"""
-Round Manager untuk Shadow Boxing
-Mengelola sistem ronde (3 ronde x 20 detik) dengan rest period
-"""
+"""Round Manager for Shadow Boxing game."""
 import time
+from typing import Literal, Optional
+
+
+RoundState = Literal["READY", "FIGHTING", "REST", "FINISHED"]
+Winner = Literal["PLAYER", "ENEMY", "DRAW"]
+
 
 class RoundManager:
-    """Manages rounds, timing, and rest periods"""
+    """Manages boxing match rounds, timing, and scoring."""
     
-    def __init__(self, total_rounds=3, round_duration=60, rest_duration=10):
-        """
-        Initialize Round Manager
-        
-        Args:
-            total_rounds: Total number of rounds (default: 3)
-            round_duration: Duration of each round in seconds (default: 60)
-            rest_duration: Rest time between rounds in seconds (default: 10)
-        """
+    def __init__(self, total_rounds: int = 3, round_duration: int = 20, rest_duration: int = 10):
         self.total_rounds = total_rounds
         self.round_duration = round_duration
         self.rest_duration = rest_duration
         
-        # Current state
         self.current_round = 1
-        self.state = "READY"  # READY, FIGHTING, REST, FINISHED
-        self.round_start_time = 0
-        self.rest_start_time = 0
+        self.state: RoundState = "READY"
+        self.round_start_time = 0.0
+        self.rest_start_time = 0.0
         
-        # Round scores
-        self.round_winners = []  # Track winner of each round
+        self.round_winners: list[Winner] = []
         self.player_round_wins = 0
         self.enemy_round_wins = 0
         
-    def start_round(self):
-        """Start a new round"""
-        if self.state == "READY" or self.state == "REST":
+    def start_round(self) -> bool:
+        """Start a new round if ready or resting."""
+        if self.state in ("READY", "REST"):
             self.state = "FIGHTING"
             self.round_start_time = time.time()
             return True
         return False
     
-    def update(self, current_time):
-        """Update round state based on current time"""
+    def update(self, current_time: float) -> None:
+        """Update round state based on elapsed time."""
         if self.state == "FIGHTING":
-            elapsed = current_time - self.round_start_time
-            
-            if elapsed >= self.round_duration:
-                # Round time up
-                if self.current_round < self.total_rounds:
-                    self.state = "REST"
-                    self.rest_start_time = current_time
-                else:
-                    self.state = "FINISHED"
-                    
+            self._update_fighting_state(current_time)
         elif self.state == "REST":
-            elapsed = current_time - self.rest_start_time
-            
-            if elapsed >= self.rest_duration:
-                # Rest period over, auto-start next round
-                self.current_round += 1
-                self.state = "FIGHTING"
-                self.round_start_time = current_time
-                print(f"Round {self.current_round} START!")  # Auto-start message
+            self._update_rest_state(current_time)
     
-    def get_remaining_time(self, current_time):
-        """Get remaining time in current round"""
+    def _update_fighting_state(self, current_time: float) -> None:
+        """Handle fighting state time expiry."""
+        elapsed = current_time - self.round_start_time
+        if elapsed >= self.round_duration:
+            if self.current_round < self.total_rounds:
+                self.state = "REST"
+                self.rest_start_time = current_time
+            else:
+                self.state = "FINISHED"
+    
+    def _update_rest_state(self, current_time: float) -> None:
+        """Handle rest period and auto-start next round."""
+        elapsed = current_time - self.rest_start_time
+        if elapsed >= self.rest_duration:
+            self.current_round += 1
+            self.state = "FIGHTING"
+            self.round_start_time = current_time
+            print(f"Round {self.current_round} START!")
+    
+    def get_remaining_time(self, current_time: float) -> float:
+        """Get remaining time in current round."""
         if self.state == "FIGHTING":
             elapsed = current_time - self.round_start_time
-            remaining = self.round_duration - elapsed
-            return max(0, remaining)
-        return 0
+            return max(0, self.round_duration - elapsed)
+        return 0.0
     
-    def get_rest_remaining(self, current_time):
-        """Get remaining rest time"""
+    def get_rest_remaining(self, current_time: float) -> float:
+        """Get remaining rest time."""
         if self.state == "REST":
             elapsed = current_time - self.rest_start_time
-            remaining = self.rest_duration - elapsed
-            return max(0, remaining)
-        return 0
+            return max(0, self.rest_duration - elapsed)
+        return 0.0
     
-    def end_round(self, winner, force_finish=False):
-        """
-        End current round and record winner
-        
-        Args:
-            winner: 'PLAYER', 'ENEMY', or 'DRAW'
-            force_finish: If True, end match immediately (KO/forfeit)
-        """
+    def end_round(self, winner: Winner, force_finish: bool = False) -> None:
+        """End current round and record winner."""
         self.round_winners.append(winner)
         
         if winner == "PLAYER":
@@ -93,7 +81,6 @@ class RoundManager:
         elif winner == "ENEMY":
             self.enemy_round_wins += 1
         
-        # Transition to rest or finish
         if force_finish:
             self.state = "FINISHED"
         elif self.current_round < self.total_rounds:
@@ -102,26 +89,16 @@ class RoundManager:
         else:
             self.state = "FINISHED"
     
-    def get_round_winner(self, player_score, enemy_score):
-        """
-        Determine round winner based on scores
-        
-        Args:
-            player_score: Player's score for the round
-            enemy_score: Enemy's score for the round
-            
-        Returns:
-            'PLAYER', 'ENEMY', or 'DRAW'
-        """
+    def get_round_winner(self, player_score: int, enemy_score: int) -> Winner:
+        """Determine round winner based on scores."""
         if player_score > enemy_score:
             return "PLAYER"
         elif enemy_score > player_score:
             return "ENEMY"
-        else:
-            return "DRAW"
+        return "DRAW"
     
-    def get_match_winner(self):
-        """Get overall match winner"""
+    def get_match_winner(self) -> Optional[Winner]:
+        """Get overall match winner."""
         if self.state != "FINISHED":
             return None
             
@@ -129,46 +106,26 @@ class RoundManager:
             return "PLAYER"
         elif self.enemy_round_wins > self.player_round_wins:
             return "ENEMY"
-        else:
-            return "DRAW"
+        return "DRAW"
     
-    def is_fighting(self):
-        """Check if currently in fighting state"""
+    def is_fighting(self) -> bool:
         return self.state == "FIGHTING"
     
-    def is_resting(self):
-        """Check if in rest period"""
+    def is_resting(self) -> bool:
         return self.state == "REST"
     
-    def is_finished(self):
-        """Check if match is finished"""
+    def is_finished(self) -> bool:
         return self.state == "FINISHED"
     
-    def is_ready(self):
-        """Check if ready to start (new round)"""
+    def is_ready(self) -> bool:
         return self.state == "READY"
     
-    def get_status_text(self, current_time):
-        """Get current status as text for display"""
-        if self.state == "READY":
-            return f"Round {self.current_round} - Press SPACE to start"
-        elif self.state == "FIGHTING":
-            remaining = int(self.get_remaining_time(current_time))
-            return f"Round {self.current_round}/{self.total_rounds} - {remaining}s"
-        elif self.state == "REST":
-            remaining = int(self.get_rest_remaining(current_time))
-            return f"REST - {remaining}s"
-        elif self.state == "FINISHED":
-            winner = self.get_match_winner()
-            return f"Match Over - Winner: {winner}"
-        return ""
-    
-    def reset(self):
-        """Reset for new match"""
+    def reset(self) -> None:
+        """Reset for new match."""
         self.current_round = 1
         self.state = "READY"
-        self.round_start_time = 0
-        self.rest_start_time = 0
+        self.round_start_time = 0.0
+        self.rest_start_time = 0.0
         self.round_winners = []
         self.player_round_wins = 0
         self.enemy_round_wins = 0

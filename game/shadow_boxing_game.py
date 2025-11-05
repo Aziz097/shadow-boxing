@@ -16,9 +16,12 @@ from detection import (
     is_hit,
 )
 from enemy.enhanced_enemy_ai import EnemyAI
+from game.bruise_effect import BruiseEffect
+from game.equipment_renderer import EquipmentRenderer
 from game.game_state import GameState
 from game.round_manager import RoundManager
 from game.sound_manager import SoundManager
+from game.ui_controls import ControlsGuide
 from game.visual_effects import VisualEffects
 from utils import get_hand_center, is_fist
 
@@ -30,12 +33,16 @@ class ShadowBoxingGame:
         """Initialize the game components."""
         self.sound = SoundManager()
         self.game_state = GameState()
-        self.round_manager = RoundManager(total_rounds=3, round_duration=60, rest_duration=10)
+        self.round_manager = RoundManager(total_rounds=3, round_duration=20, rest_duration=10)
         self.vfx = VisualEffects()
+        self.bruise = BruiseEffect()
+        self.equipment = EquipmentRenderer()
+        self.controls_guide = ControlsGuide()
         self.difficulty = "MEDIUM"
         self.enemy = EnemyAI(difficulty=self.difficulty)
         self.match_over_announced = False
         self.last_round_summary = None
+        self.ko_sound_played = False  # Track if KO sound has been played
 
         # Track previous round state for detecting changes
         self.prev_round_state = "READY"
@@ -64,6 +71,10 @@ class ShadowBoxingGame:
         self.cap = cv2.VideoCapture(camera_index)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+        
+        # Create fullscreen window
+        cv2.namedWindow("Shadow Boxing - Press Q to quit", cv2.WND_PROP_FULLSCREEN)
+        cv2.setWindowProperty("Shadow Boxing - Press Q to quit", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
         print("\n=== Shadow Boxing Game Initialized ===")
         print(f"Difficulty: {self.difficulty}")
@@ -151,6 +162,7 @@ class ShadowBoxingGame:
                 ):
                     # Round just started!
                     self.vfx.show_round_start(self.round_manager.current_round)
+                    self.sound.play_round_start(self.round_manager.current_round)
 
                 self.prev_round_state = self.round_manager.state
                 self.prev_round_number = self.round_manager.current_round
@@ -214,8 +226,17 @@ class ShadowBoxingGame:
                                 print("Blocked!")
                             else:
                                 if self.game_state.enemy_hit_player(current_time):
-                                    self.sound.play_hit()
+                                    # Check if this will be the last hit (critical HP)
+                                    is_critical_hit = self.game_state.player_hp <= 20
+                                    
+                                    # Play appropriate punch sound
+                                    self.sound.play_enemy_hit(self.game_state.player_hp, critical=is_critical_hit)
+                                    
                                     self.vfx.trigger_hit_flash()
+                                    # Add bruise effect on player's face
+                                    if face_results.multi_face_landmarks:
+                                        self.bruise.add_bruise(face_results.multi_face_landmarks[0], 
+                                                             frame_width, frame_height, current_time)
                                     print(f"Hit taken! Player HP: {self.game_state.player_hp}")
 
                     # Check round end
@@ -230,6 +251,9 @@ class ShadowBoxingGame:
                         print(f"Score - Player: {player_score}, Enemy: {enemy_score}\n")
 
                 # === VISUAL RENDERING ===
+                # Update bruise effects
+                self.bruise.update(current_time)
+                
                 # Draw base elements
                 frame = self.vfx.draw_hp_bars(frame, self.game_state)
                 frame = self.vfx.draw_stamina_bar(frame, self.enemy)
@@ -244,9 +268,29 @@ class ShadowBoxingGame:
                     frame = self.vfx.draw_hit_flash(frame, current_time)
 
                 frame = self.vfx.draw_game_over(frame, self.game_state)
+                
+                # Play KO sound when someone loses (only once)
+                if self.game_state.game_over and not self.ko_sound_played:
+                    self.sound.play_ko()
+                    self.ko_sound_played = True
+                    print(f"KNOCKOUT! {self.game_state.winner} WINS!")
 
                 # Draw round start notification (on top of everything)
                 frame = self.vfx.draw_round_notification(frame, current_time)
+                
+                # Draw bruise effects (after hit flash, before UI)
+                if face_results.multi_face_landmarks:
+                    frame = self.bruise.draw(frame, face_results.multi_face_landmarks[0], 
+                                            frame_width, frame_height)
+                
+                # Draw equipment (helm for player, gloves for enemy)
+                if face_results.multi_face_landmarks:
+                    frame = self.equipment.draw_player_helm(frame, face_results.multi_face_landmarks[0],
+                                                           pose_landmarks, frame_width, frame_height)
+                
+                # Draw enemy gloves
+                frame = self.equipment.draw_enemy_gloves(frame, self.enemy, current_time,
+                                                        frame_width, frame_height)
 
                 # Draw face bbox (debug)
                 if face_bbox:
@@ -256,6 +300,9 @@ class ShadowBoxingGame:
                 if hand_results.multi_hand_landmarks:
                     for hand_lm in hand_results.multi_hand_landmarks:
                         self._drawing_utils.draw_landmarks(frame, hand_lm, self._hand_connections)
+
+                # Draw controls guide (last, so it's on top)
+                frame = self.controls_guide.draw(frame)
 
                 # Show difficulty indicator
                 cv2.putText(
@@ -280,12 +327,16 @@ class ShadowBoxingGame:
                     if self.round_manager.is_ready():
                         self.round_manager.start_round()
                         self.game_state.reset()
+                        self.bruise.clear_all()
+                        self.ko_sound_played = False
                         self.enemy = EnemyAI(difficulty=self.difficulty)
                         print(f"Round {self.round_manager.current_round} START!")
                     elif self.round_manager.is_finished() or self.game_state.game_over:
                         # Restart game (match finished or KO)
                         self.round_manager.reset()
                         self.game_state.reset()
+                        self.bruise.clear_all()
+                        self.ko_sound_played = False
                         self.enemy = EnemyAI(difficulty=self.difficulty)
                         print("\n=== New Game Started! ===")
                         print(f"Difficulty: {self.difficulty}")
@@ -295,6 +346,9 @@ class ShadowBoxingGame:
                 elif key == ord("s"):
                     enabled = self.sound.toggle_sound()
                     print(f"Sound: {'ON' if enabled else 'OFF'}")
+                elif key == ord("h"):
+                    visible = self.controls_guide.toggle()
+                    print(f"Controls Guide: {'ON' if visible else 'OFF'}")
         finally:
             self.cap.release()
             cv2.destroyAllWindows()

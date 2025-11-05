@@ -1,78 +1,93 @@
-"""
-Sound Manager untuk Shadow Boxing Game
-Mengelola semua efek suara dalam game
-"""
-import pygame
+"""Sound Manager for Shadow Boxing Game."""
 import os
+from typing import Dict, Optional
+
+import pygame
+
 
 class SoundManager:
-    """Manages all game sound effects"""
+    """Manages game sound effects with volume control and playback."""
+    
+    CRITICAL_HP_THRESHOLD = 20
+    
+    SOUND_VOLUMES = {
+        'punch': 0.7,
+        'weak_punch': 0.7,
+        'strong_punch': 1.0,
+        'round': 0.9,
+        'ko': 1.0,
+        'hit': 0.8,
+        'block': 0.6,
+    }
     
     def __init__(self):
-        """Initialize pygame mixer and load sounds"""
         pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=512)
-        self.sounds = {}
+        self.sounds: Dict[str, pygame.mixer.Sound] = {}
         self.enabled = True
-        
-        # Load existing sounds
         self._load_sounds()
         
-    def _load_sounds(self):
-        """Load all sound files from assets/sfx"""
+    def _load_sounds(self) -> None:
+        """Load all sound files from assets directory."""
+        base_path = os.getcwd()
+        
         sound_files = {
-            'punch': 'assets/sfx/strongpunch.mp3',
-            # Placeholder untuk sound lainnya - bisa ditambahkan nanti
-            # 'hit': 'assets/sfx/hit.mp3',
-            # 'block': 'assets/sfx/block.mp3',
-            # 'round_bell': 'assets/sfx/bell.mp3',
+            'punch': os.path.join(base_path, 'assets', 'sfx', 'strongpunch.mp3'),
+            'weak_punch': os.path.join(base_path, 'assets', 'sfx', 'weak-punch.mp3'),
+            'strong_punch': os.path.join(base_path, 'assets', 'sfx', 'strongpunch.mp3'),
+            'round_1': os.path.join(base_path, 'assets', 'sfx', 'round', 'round-1.mp3'),
+            'round_2': os.path.join(base_path, 'assets', 'sfx', 'round', 'round-2.mp3'),
+            'round_3': os.path.join(base_path, 'assets', 'sfx', 'round', 'round-3.mp3'),
+            'ko': os.path.join(base_path, 'assets', 'sfx', 'KO.mp3'),
         }
         
-        for name, path in sound_files.items():
-            full_path = os.path.join(os.path.dirname(__file__), '..', path)
-            if os.path.exists(full_path):
-                try:
-                    self.sounds[name] = pygame.mixer.Sound(full_path)
-                    print(f"✓ Loaded sound: {name}")
-                except Exception as e:
-                    print(f"✗ Failed to load {name}: {e}")
-            else:
-                print(f"✗ Sound file not found: {full_path}")
+        for name, full_path in sound_files.items():
+            self._load_single_sound(name, full_path)
     
-    def play(self, sound_name, volume=1.0):
-        """Play a sound effect"""
-        if not self.enabled:
+    def _load_single_sound(self, name: str, path: str) -> None:
+        """Load a single sound file."""
+        if not os.path.exists(path):
+            print(f"✗ Sound file not found: {path}")
             return
             
-        if sound_name in self.sounds:
-            self.sounds[sound_name].set_volume(volume)
-            self.sounds[sound_name].play()
+        try:
+            self.sounds[name] = pygame.mixer.Sound(path)
+            print(f"✓ Loaded sound: {name}")
+        except Exception as e:
+            print(f"✗ Failed to load {name}: {e}")
     
-    def play_punch(self):
-        """Play punch sound effect"""
-        self.play('punch', volume=0.7)
+    def play(self, sound_name: str, volume: Optional[float] = None) -> None:
+        """Play a sound effect with optional volume override."""
+        if not self.enabled or sound_name not in self.sounds:
+            return
+            
+        sound = self.sounds[sound_name]
+        sound.set_volume(volume if volume is not None else 1.0)
+        sound.play()
     
-    def play_hit(self):
-        """Play hit sound effect"""
-        self.play('hit', volume=0.8)
+    def play_punch(self) -> None:
+        """Play player punch sound."""
+        self.play('punch', self.SOUND_VOLUMES['punch'])
     
-    def play_block(self):
-        """Play block sound effect"""
-        self.play('block', volume=0.6)
+    def play_round_start(self, round_number: int) -> None:
+        """Play round announcement sound."""
+        self.play(f'round_{round_number}', self.SOUND_VOLUMES['round'])
     
-    def play_round_bell(self):
-        """Play round bell sound"""
-        self.play('round_bell', volume=0.9)
+    def play_ko(self) -> None:
+        """Play knockout sound."""
+        self.play('ko', self.SOUND_VOLUMES['ko'])
     
-    def toggle_sound(self):
-        """Toggle sound on/off"""
+    def play_enemy_hit(self, player_hp: float, critical: bool = False) -> None:
+        """Play appropriate sound when enemy hits player."""
+        is_critical = critical or player_hp <= self.CRITICAL_HP_THRESHOLD
+        sound_key = 'strong_punch' if is_critical else 'weak_punch'
+        volume = self.SOUND_VOLUMES[sound_key]
+        self.play(sound_key, volume)
+    
+    def toggle_sound(self) -> bool:
+        """Toggle sound on/off and return new state."""
         self.enabled = not self.enabled
         return self.enabled
     
-    def set_volume(self, volume):
-        """Set master volume (0.0 - 1.0)"""
-        for sound in self.sounds.values():
-            sound.set_volume(volume)
-    
-    def stop_all(self):
-        """Stop all currently playing sounds"""
+    def stop_all(self) -> None:
+        """Stop all currently playing sounds."""
         pygame.mixer.stop()
