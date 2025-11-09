@@ -2,31 +2,35 @@ import cv2
 import mediapipe as mp
 import numpy as np
 import time
+from collections import defaultdict
 
 # Inisialisasi MediaPipe
 mp_hands = mp.solutions.hands
 mp_drawing = mp.solutions.drawing_utils
 hands = mp_hands.Hands(
     static_image_mode=False,
-    max_num_hands=2,
-    min_detection_confidence=0.7,
-    min_tracking_confidence=0.7
+    max_num_hands=2,  # Sekarang support 2 tangan
+    min_detection_confidence=0.5,
+    min_tracking_confidence=0.5
 )
 
-#print dir mp hand
-print(dir(hands))
 # Variabel global
-last_fist_time = 0
+last_fist_time = defaultdict(float)  # Per-hand tracking
 FIST_MEMORY_DURATION = 0.5
 last_punch_time = 0
-PUNCH_COOLDOWN = 0.3
-puch_countr = 0
+PUNCH_COOLDOWN = 0
+punch_counter = 0
 
-# Untuk deteksi velocity
-prev_hand_pos = None
-prev_time = 0
-VELOCITY_THRESHOLD = 800  # sesuaikan
-DIRECTION_THRESHOLD = 0.5  # cos theta > 0.7 = arah mendekati wajah
+# State tracking per tangan
+hand_states = {
+    'left': {'prev_pos': None, 'prev_time': 0},
+    'right': {'prev_pos': None, 'prev_time': 0}
+}
+HAND_ASSIGNMENT_THRESHOLD = 150  # Threshold untuk membedakan kiri/kanan
+
+# Konstanta deteksi
+VELOCITY_THRESHOLD = 800
+DIRECTION_THRESHOLD = 0.5
 
 def is_fist(hand_landmarks):
     """
@@ -83,50 +87,50 @@ def get_hand_center(hand_landmarks, frame_width, frame_height):
     x_coords = [lm.x * frame_width for lm in hand_landmarks.landmark]
     y_coords = [lm.y * frame_height for lm in hand_landmarks.landmark]
     return np.array([np.mean(x_coords), np.mean(y_coords)])
-    
-def detect_punch_by_velocity(hand_landmarks, current_time, frame_width, frame_height):
-    """
-    Deteksi pukulan berdasarkan kecepatan dan arah gerakan.
-    """
-    global prev_hand_pos, prev_time, last_punch_time
 
-    # Ambil posisi tangan sekarang
+def detect_punch(hand_landmarks, hand_id, current_time, frame_width, frame_height):
+    """
+    Deteksi punch per tangan menggunakan state terpisah
+    """
+    global last_punch_time
+    
+    hand_state = hand_states[hand_id]
     hand_pos = get_hand_center(hand_landmarks, frame_width, frame_height)
 
-    if prev_hand_pos is not None and prev_time != 0:
-        # Hitung kecepatan (perubahan posisi per detik)
-        delta_time = current_time - prev_time
-        if delta_time > 0:
-            velocity = (hand_pos - prev_hand_pos) / delta_time
+    if hand_state['prev_pos'] is not None and hand_state['prev_time'] != 0:
+        delta_time = current_time - hand_state['prev_time']
+        if delta_time > 0.001:  # Hindari pembagian nol
+            velocity = (hand_pos - hand_state['prev_pos']) / delta_time
             speed = np.linalg.norm(velocity)
 
-            # Jika kecepatan tinggi → cek arah
             if speed > VELOCITY_THRESHOLD:
-                # Asumsikan wajah di tengah layar
                 face_center = np.array([frame_width // 2, frame_height // 2])
-
-                # Vektor dari tangan ke wajah
                 to_face = face_center - hand_pos
-
-                # Normalisasi
+                
                 if np.linalg.norm(to_face) > 0:
-                    to_face = to_face / np.linalg.norm(to_face)
+                    to_face_norm = to_face / np.linalg.norm(to_face)
                     velocity_norm = velocity / np.linalg.norm(velocity)
-
-                    # Hitung cos theta (arah gerakan vs arah ke wajah)
-                    cos_theta = np.dot(velocity_norm, to_face)
-
-                    # Jika arah gerakan mendekati wajah (cos theta > 0.7)
+                    cos_theta = np.dot(velocity_norm, to_face_norm)
+                    
                     if cos_theta > DIRECTION_THRESHOLD:
                         if current_time - last_punch_time > PUNCH_COOLDOWN:
                             last_punch_time = current_time
+                            hand_state['prev_pos'] = hand_pos  # Reset posisi setelah punch
+                            hand_state['prev_time'] = current_time
                             return True
 
-    # Update posisi dan waktu
-    prev_hand_pos = hand_pos
-    prev_time = current_time
-
+    # Update state hanya jika tidak ada punch
+    hand_state['prev_pos'] = hand_pos
+    hand_state['prev_time'] = current_time
     return False
+
+def assign_hand_id(hand_center, frame_width):
+    """
+    Menentukan ID tangan (kiri/kanan) berdasarkan posisi horizontal
+    """
+    if hand_center[0] < frame_width // 2:
+        return 'left'
+    return 'right'
 
 # Buka kamera
 cap = cv2.VideoCapture(0)
@@ -141,8 +145,6 @@ while cap.isOpened():
     current_time = time.time()
     frame_width = frame.shape[1]
     frame_height = frame.shape[0]
-
-    # Flip horizontal agar mirror
     frame = cv2.flip(frame, 1)
     rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     results = hands.process(rgb)
@@ -152,36 +154,43 @@ while cap.isOpened():
 
     if results.multi_hand_landmarks:
         for hand_landmarks in results.multi_hand_landmarks:
-            # Gambar landmark (opsional)
             mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+            
+            hand_center = get_hand_center(hand_landmarks, frame_width, frame_height)
+            hand_id = assign_hand_id(hand_center, frame_width)
             
             # Cek kepalan
             if is_fist(hand_landmarks):
                 fist_detected = True
-                last_fist_time = current_time
+                last_fist_time[hand_id] = current_time
 
-            # Deteksi pukulan berbasis velocity
+            # Deteksi punch hanya jika fist terdeteksi
             if fist_detected:
-                if detect_punch_by_velocity(hand_landmarks, current_time, frame_width, frame_height):
+                if detect_punch(hand_landmarks, hand_id, current_time, frame_width, frame_height):
                     punch_detected = True
 
     else:
-        # Jika tangan tidak terdeteksi, cek apakah masih dalam masa "memory" untuk fist
-        if current_time - last_fist_time < FIST_MEMORY_DURATION:
-            fist_detected = True
+        # Reset state ketika tidak ada tangan terdeteksi
+        for hand_id in hand_states:
+            hand_states[hand_id]['prev_pos'] = None
+            hand_states[hand_id]['prev_time'] = 0
+        
+        # Cek fist memory untuk semua tangan
+        for hand_id in last_fist_time:
+            if current_time - last_fist_time[hand_id] < FIST_MEMORY_DURATION:
+                fist_detected = True
+                break
 
     # Tampilkan status
+    status_text = "PUNCH!" if punch_detected else ("FIST!" if fist_detected else "Open Hand")
+    color = (0, 0, 255) if punch_detected else ((0, 255, 0) if fist_detected else (255, 255, 255))
+    
+    cv2.putText(frame, status_text, (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, color, 3)
     if punch_detected:
-        cv2.putText(frame, "PUNCH!", (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 3)
-        puch_countr += 1
-    elif fist_detected:
-        cv2.putText(frame, "FIST!", (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 3)
-    else:
-        cv2.putText(frame, "Open Hand", (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 3)
-
-    #tampilkan punch counter
-    cv2.putText(frame, f"Punch Count: {puch_countr}", (50, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2)
-    cv2.imshow('Punch Detector (Velocity-Based) - Tekan Q untuk keluar', frame)
+        punch_counter += 1
+    
+    cv2.putText(frame, f"Punch Count: {punch_counter}", (50, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2)
+    cv2.imshow('Punch Detector (Multi-Hand)', frame)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
