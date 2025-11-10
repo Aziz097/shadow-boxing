@@ -18,7 +18,7 @@ from systems.visual_effects import VisualEffectsManager
 from player.player import Player
 from enemy.enemy import Enemy
 
-from utils.helpers import draw_text, draw_health_bar, is_point_in_rect, get_landmark_coords
+from utils.helpers import draw_text, draw_health_bar, is_point_in_rect, get_landmark_coords, draw_text_with_font
 
 
 class Hitbox:
@@ -568,6 +568,27 @@ class GameManager:
                           config.FONT_PATH, 100, 
                           color=(255, 215, 0), outline=True, outline_width=3)
         
+        # Difficulty selector (compact, top-right) - moved down 200px
+        diff_y = 400
+        draw_text(frame, "DIFFICULTY:", (frame_width - 350, diff_y), 
+                 font_scale=0.8, thickness=2, color=(0, 255, 255))
+        
+        # Show difficulty options
+        difficulties = ["EASY", "MEDIUM", "HARD"]
+        diff_colors = [(0, 255, 0), (255, 255, 0), (0, 0, 255)]  # Green, Yellow, Red
+        
+        for i, (diff, color) in enumerate(zip(difficulties, diff_colors)):
+            option_y = diff_y + 40 + (i * 35)
+            prefix = f"{i+1}. "
+            
+            # Highlight current difficulty
+            if diff == self.difficulty:
+                draw_text(frame, f"> {prefix}{diff} <", (frame_width - 350, option_y), 
+                         font_scale=0.7, thickness=2, color=color)
+            else:
+                draw_text(frame, f"  {prefix}{diff}", (frame_width - 350, option_y), 
+                         font_scale=0.6, thickness=1, color=(150, 150, 150))
+        
         # Instructions
         instructions = [
             "",
@@ -777,15 +798,60 @@ class GameManager:
         draw_text(frame, f"Enemy Health: {int(self.enemy.current_health)}%", 
                  (frame_width // 2 - 200, stats_y), font_scale=1.2, thickness=2, color=(0, 0, 255))
         
-        stats_y += 60
-        player_stats = self.player.get_stats()
-        draw_text(frame, f"Your Accuracy: {player_stats['accuracy']:.1f}%", 
-                 (frame_width // 2 - 200, stats_y), font_scale=1.0, thickness=2, color=(255, 255, 255))
+        # stats_y += 60
+        # player_stats = self.player.get_stats()
+        # draw_text(frame, f"Your Accuracy: {player_stats['accuracy']:.1f}%", 
+        #          (frame_width // 2 - 200, stats_y), font_scale=1.0, thickness=2, color=(255, 255, 255))
         
         # Instructions
         stats_y += 100
         draw_text(frame, "Press SPACE to play again | Q to quit", 
                  (frame_width // 2 - 350, stats_y), font_scale=1.0, thickness=2, color=(200, 200, 200))
+        
+        return frame
+    
+    def render_paused(self, frame):
+        """Render paused state with overlay."""
+        # Use config window dimensions for consistency
+        frame_width = config.WINDOW_WIDTH
+        frame_height = config.WINDOW_HEIGHT
+        
+        # Resize frame to match window size if needed
+        if frame.shape[:2] != (frame_height, frame_width):
+            frame = cv2.resize(frame, (frame_width, frame_height))
+        
+        # Create semi-transparent dark overlay
+        overlay = frame.copy()
+        cv2.rectangle(overlay, (0, 0), (frame_width, frame_height), (0, 0, 0), -1)
+        frame = cv2.addWeighted(frame, 0.3, overlay, 0.7, 0)
+        
+        # PAUSED text with Daydream font
+        paused_text = "PAUSED"
+        try:
+            from PIL import ImageFont
+            font = ImageFont.truetype(config.FONT_PATH, 120)
+            bbox = font.getbbox(paused_text)
+            text_width = bbox[2] - bbox[0]
+            text_x = (frame_width - text_width) // 2
+        except:
+            text_x = frame_width // 2 - 300
+        
+        draw_text_with_font(frame, paused_text, (text_x, frame_height // 2 - 150), 
+                          config.FONT_PATH, 120, 
+                          color=(255, 255, 255), outline=True, outline_width=3)
+        
+        # Instructions
+        instructions = [
+            "Press ESC to Resume",
+            "Press Q to Quit"
+        ]
+        
+        y_offset = frame_height // 2 + 50
+        for instruction in instructions:
+            draw_text(frame, instruction, 
+                     (frame_width // 2 - 200, y_offset), 
+                     font_scale=1.2, thickness=2, color=(200, 200, 200))
+            y_offset += 60
         
         return frame
     
@@ -817,6 +883,9 @@ class GameManager:
             elif self.state == GameState.PLAYING:
                 self.update_game(dt)
                 frame = self.render_game(frame)
+            elif self.state == GameState.PAUSED:
+                # Show paused overlay (don't update game logic)
+                frame = self.render_paused(frame)
             elif self.state == GameState.GAME_OVER:
                 frame = self.render_game_over(frame)
             
@@ -835,6 +904,14 @@ class GameManager:
                     self.state = GameState.MENU
             elif key == config.KEY_PAUSE:
                 self.toggle_pause()
+            # Difficulty selection (only in menu)
+            elif self.state == GameState.MENU:
+                if key == ord('1'):
+                    self.change_difficulty("EASY")
+                elif key == ord('2'):
+                    self.change_difficulty("MEDIUM")
+                elif key == ord('3'):
+                    self.change_difficulty("HARD")
         
         self.cleanup()
     
@@ -860,6 +937,14 @@ class GameManager:
             self.state = GameState.PAUSED
         elif self.state == GameState.PAUSED:
             self.state = GameState.PLAYING
+    
+    def change_difficulty(self, new_difficulty: str):
+        """Change game difficulty."""
+        if new_difficulty in ["EASY", "MEDIUM", "HARD"]:
+            self.difficulty = new_difficulty
+            # Update enemy with new difficulty
+            self.enemy = Enemy(self.difficulty)
+            print(f"Difficulty changed to: {new_difficulty}")
     
     def cleanup(self):
         """Cleanup resources."""

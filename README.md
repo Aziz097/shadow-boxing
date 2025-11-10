@@ -153,7 +153,7 @@ shadow-boxing/
 
 ---
 
-## ⚙️ Level Kesulitan
+## Level Kesulitan
 
 ### Easy
 - Serangan enemy lebih lambat (3-5s cooldown)

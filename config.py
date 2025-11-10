@@ -97,8 +97,12 @@ DIFFICULTY_SETTINGS = {
     }
 }
 
-# Default difficulty
-DEFAULT_DIFFICULTY = "MEDIUM"
+# === CHANGE DIFFICULTY HERE ===
+# Options: "EASY", "MEDIUM", "HARD"
+# EASY = Slower enemy, more time to attack, less damage
+# MEDIUM = Balanced gameplay (recommended)
+# HARD = Fast enemy, less time to attack, more damage
+DEFAULT_DIFFICULTY = "MEDIUM"  # <-- CHANGE THIS TO "EASY" or "HARD"
 
 # === MediaPipe Settings ===
 # Hand Detection
