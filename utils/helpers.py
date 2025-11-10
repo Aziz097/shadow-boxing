@@ -5,6 +5,11 @@ import cv2
 import numpy as np
 from typing import Tuple, List
 import math
+from PIL import Image, ImageDraw, ImageFont
+import config
+
+# Global cache for pre-rendered text images (to avoid lag)
+_TEXT_CACHE = {}
 
 
 def calculate_distance(p1: Tuple[float, float], p2: Tuple[float, float]) -> float:
@@ -46,6 +51,67 @@ def draw_text(frame: np.ndarray, text: str, position: Tuple[int, int],
     
     # Draw text
     cv2.putText(frame, text, position, font, font_scale, color, thickness, cv2.LINE_AA)
+
+
+def draw_text_with_font(frame: np.ndarray, text: str, position: Tuple[int, int],
+                       font_path: str, font_size: int = 60,
+                       color: Tuple[int, int, int] = (255, 255, 255),
+                       outline: bool = True, outline_width: int = 4) -> None:
+    """
+    Draw text using custom TrueType/OpenType font (like Daydream).
+    OPTIMIZED: Pre-renders and caches text to avoid lag.
+    """
+    global _TEXT_CACHE
+    
+    try:
+        # Create cache key
+        cache_key = (text, font_path, font_size, color, outline, outline_width)
+        
+        # Check if already cached
+        if cache_key not in _TEXT_CACHE:
+            # Load custom font
+            font = ImageFont.truetype(font_path, font_size)
+            
+            # Get text bounding box
+            dummy_img = Image.new('RGBA', (1, 1))
+            dummy_draw = ImageDraw.Draw(dummy_img)
+            bbox = dummy_draw.textbbox((0, 0), text, font=font)
+            text_width = bbox[2] - bbox[0] + outline_width * 2
+            text_height = bbox[3] - bbox[1] + outline_width * 2
+            
+            # Create transparent image for text only
+            text_img = Image.new('RGBA', (text_width, text_height), (0, 0, 0, 0))
+            text_draw = ImageDraw.Draw(text_img)
+            
+            # Draw outline if requested
+            if outline:
+                for offset_x in range(-outline_width, outline_width + 1):
+                    for offset_y in range(-outline_width, outline_width + 1):
+                        if offset_x != 0 or offset_y != 0:
+                            text_draw.text(
+                                (outline_width + offset_x, outline_width + offset_y),
+                                text, font=font, fill=(0, 0, 0, 255)
+                            )
+            
+            # Draw main text (convert BGR to RGBA)
+            color_rgba = (color[2], color[1], color[0], 255)
+            text_draw.text((outline_width, outline_width), text, font=font, fill=color_rgba)
+            
+            # Convert PIL image to OpenCV format and cache it
+            text_np = np.array(text_img)
+            text_bgr = cv2.cvtColor(text_np, cv2.COLOR_RGBA2BGRA)
+            _TEXT_CACHE[cache_key] = text_bgr
+        
+        # Use cached text image
+        text_bgr = _TEXT_CACHE[cache_key]
+        
+        # Overlay using alpha blending (VERY fast!)
+        overlay_image_alpha(frame, text_bgr, position, alpha=1.0)
+        
+    except Exception as e:
+        # Fallback to regular text if custom font fails
+        print(f"Custom font error: {e}, using fallback")
+        draw_text(frame, text, position, font_scale=font_size/40, color=color, thickness=3, outline=outline)
 
 
 def draw_health_bar(frame: np.ndarray, position: Tuple[int, int], 

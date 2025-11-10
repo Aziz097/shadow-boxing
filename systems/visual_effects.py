@@ -18,6 +18,7 @@ class VisualEffectsManager:
         self.helm_image: Optional[np.ndarray] = None
         self.target_icon: Optional[np.ndarray] = None
         self.punch_bag_image: Optional[np.ndarray] = None
+        self.fight_image: Optional[np.ndarray] = None
         
         # Load images with alpha channel
         self._load_images()
@@ -43,7 +44,7 @@ class VisualEffectsManager:
                 self.target_icon = cv2.resize(self.target_icon, (60, 60))
                 print("Loaded target icon")
         
-        # Load punching bag (use provided image path)
+        # Load punching bag
         punch_bag_path = os.path.join(config.IMAGE_DIR, "punch-bag-red.png")
         if os.path.exists(punch_bag_path):
             self.punch_bag_image = cv2.imread(punch_bag_path, cv2.IMREAD_UNCHANGED)
@@ -51,6 +52,12 @@ class VisualEffectsManager:
                 print("Loaded punching bag image")
         else:
             print(f"Punching bag not found at {punch_bag_path}, will use default visuals")
+        
+        # Load FIGHT image
+        if os.path.exists(config.FIGHT_IMAGE):
+            self.fight_image = cv2.imread(config.FIGHT_IMAGE, cv2.IMREAD_UNCHANGED)
+            if self.fight_image is not None:
+                print("Loaded FIGHT image")
     
     def draw_helm_overlay(self, frame: np.ndarray, pose_landmarks, frame_width: int, frame_height: int):
         """

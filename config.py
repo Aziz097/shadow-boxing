@@ -34,8 +34,8 @@ SFX_STRONG_PUNCH = os.path.join(SFX_DIR, "strongpunch.mp3")
 SFX_MEME_PUNCH = os.path.join(SFX_DIR, "punch-meme.mp3")
 
 # === Game Settings ===
-WINDOW_WIDTH = 1440
-WINDOW_HEIGHT = 720
+WINDOW_WIDTH = 1560
+WINDOW_HEIGHT = 840
 FPS = 60
 FULLSCREEN = True  # Set to True for fullscreen
 

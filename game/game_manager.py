@@ -547,16 +547,26 @@ class GameManager:
         if pose_landmarks:
             self.mediapipe.draw_pose_landmarks(frame)
         
-        # Semi-transparent overlay
+        # Semi-transparent overlay (simple, fast)
         overlay = frame.copy()
-        cv2.rectangle(overlay, (0, 0), (frame_width, frame_height), (0, 0, 0), -1)
+        cv2.rectangle(overlay, (0, 0), (frame_width, frame_height), (10, 10, 40), -1)
         frame = cv2.addWeighted(frame, 0.3, overlay, 0.7, 0)
         
-        # Title
+        # Title with Daydream font (cached for speed!)
+        from utils.helpers import draw_text_with_font
         title = "SHADOW BOXING"
-        title_size = cv2.getTextSize(title, cv2.FONT_HERSHEY_SIMPLEX, 2.5, 5)[0]
-        title_x = (frame_width - title_size[0]) // 2
-        draw_text(frame, title, (title_x, 120), font_scale=2.5, thickness=5, color=(255, 255, 0))
+        try:
+            from PIL import ImageFont
+            font = ImageFont.truetype(config.FONT_PATH, 100)
+            bbox = font.getbbox(title)
+            title_width = bbox[2] - bbox[0]
+            title_x = (frame_width - title_width) // 2
+        except:
+            title_x = frame_width // 2 - 400
+        
+        draw_text_with_font(frame, title, (title_x, 80), 
+                          config.FONT_PATH, 100, 
+                          color=(255, 215, 0), outline=True, outline_width=3)
         
         # Instructions
         instructions = [
@@ -601,27 +611,55 @@ class GameManager:
         return frame
     
     def render_splash(self, frame: np.ndarray):
-        """Render round splash screen."""
+        """Render round splash screen with Daydream font and FIGHT image."""
+        from utils.helpers import draw_text_with_font, overlay_image_alpha
+        
         frame = cv2.resize(frame, (config.WINDOW_WIDTH, config.WINDOW_HEIGHT))
         frame_width, frame_height = config.WINDOW_WIDTH, config.WINDOW_HEIGHT
         
-        # Dark overlay
+        # Dark overlay (simple, fast)
         overlay = frame.copy()
-        cv2.rectangle(overlay, (0, 0), (frame_width, frame_height), (0, 0, 0), -1)
-        frame = cv2.addWeighted(frame, 0.2, overlay, 0.8, 0)
+        cv2.rectangle(overlay, (0, 0), (frame_width, frame_height), (15, 15, 50), -1)
+        frame = cv2.addWeighted(frame, 0.3, overlay, 0.7, 0)
         
-        # Round text
+        # Calculate elapsed time for animation
+        elapsed = time.time() - self.splash_start_time
+        
+        # Round text with Daydream font - STATIC size for caching
         round_text = f"ROUND {self.current_round}"
-        text_size = cv2.getTextSize(round_text, cv2.FONT_HERSHEY_SIMPLEX, 4.0, 8)[0]
-        text_x = (frame_width - text_size[0]) // 2
-        text_y = frame_height // 2
-        draw_text(frame, round_text, (text_x, text_y), font_scale=4.0, thickness=8, color=(255, 255, 0))
+        font_size = 120  # Fixed size for cache efficiency
+        text_y = frame_height // 2 - 100
         
-        # "FIGHT!" text
-        fight_text = "FIGHT!"
-        fight_size = cv2.getTextSize(fight_text, cv2.FONT_HERSHEY_SIMPLEX, 2.0, 4)[0]
-        fight_x = (frame_width - fight_size[0]) // 2
-        draw_text(frame, fight_text, (fight_x, text_y + 100), font_scale=2.0, thickness=4, color=(0, 255, 0))
+        # Center text
+        try:
+            from PIL import ImageFont
+            font = ImageFont.truetype(config.FONT_PATH, font_size)
+            bbox = font.getbbox(round_text)
+            text_width = bbox[2] - bbox[0]
+            text_x = (frame_width - text_width) // 2
+        except:
+            text_x = frame_width // 2 - 200
+        
+        # Use cached rendering - MUCH faster!
+        draw_text_with_font(frame, round_text, (text_x, text_y), 
+                          config.FONT_PATH, font_size, 
+                          color=(255, 215, 0), outline=True, outline_width=3)
+        
+        # Show FIGHT image after 0.5 seconds
+        if elapsed > 0.5 and self.vfx.fight_image is not None:
+            # Scale and position FIGHT image
+            fight_scale = 0.5 + (elapsed - 0.5) * 0.3  # Grow effect
+            if fight_scale > 1.0:
+                fight_scale = 1.0
+            
+            fight_width = int(600 * fight_scale)
+            fight_height = int(300 * fight_scale)
+            resized_fight = cv2.resize(self.vfx.fight_image, (fight_width, fight_height))
+            
+            fight_x = (frame_width - fight_width) // 2
+            fight_y = frame_height // 2 + 50
+            
+            overlay_image_alpha(frame, resized_fight, (fight_x, fight_y), alpha=0.9)
         
         return frame
     
@@ -668,22 +706,41 @@ class GameManager:
         return frame
     
     def render_game_over(self, frame: np.ndarray):
-        """Render game over screen with winner."""
+        """Render game over screen with winner - Daydream font."""
+        from utils.helpers import draw_text_with_font
+        
         frame = cv2.resize(frame, (config.WINDOW_WIDTH, config.WINDOW_HEIGHT))
         frame_width, frame_height = config.WINDOW_WIDTH, config.WINDOW_HEIGHT
         
-        # Dark overlay
+        # Dark overlay with color based on result
         overlay = frame.copy()
-        cv2.rectangle(overlay, (0, 0), (frame_width, frame_height), (0, 0, 0), -1)
+        if self.winner == "PLAYER":
+            overlay_color = (0, 50, 0)  # Green tint
+        elif self.winner == "ENEMY":
+            overlay_color = (0, 0, 50)  # Red tint
+        else:
+            overlay_color = (25, 25, 25)  # Gray
+        
+        cv2.rectangle(overlay, (0, 0), (frame_width, frame_height), overlay_color, -1)
         frame = cv2.addWeighted(frame, 0.2, overlay, 0.8, 0)
         
-        # Game Over text
+        # Game Over text with Daydream
         game_over_text = "GAME OVER"
-        text_size = cv2.getTextSize(game_over_text, cv2.FONT_HERSHEY_SIMPLEX, 3.5, 7)[0]
-        text_x = (frame_width - text_size[0]) // 2
-        draw_text(frame, game_over_text, (text_x, 150), font_scale=3.5, thickness=7, color=(255, 255, 255))
+        try:
+            from PIL import ImageFont
+            font = ImageFont.truetype(config.FONT_PATH, 90)
+            bbox = font.getbbox(game_over_text)
+            text_width = bbox[2] - bbox[0]
+            text_x = (frame_width - text_width) // 2
+        except:
+            text_x = frame_width // 2 - 300
         
-        # Winner announcement
+        # Cached for speed
+        draw_text_with_font(frame, game_over_text, (text_x, 100), 
+                          config.FONT_PATH, 90, 
+                          color=(200, 200, 200), outline=True, outline_width=3)
+        
+        # Winner announcement with Daydream
         if self.winner == "PLAYER":
             winner_text = "YOU WIN!"
             winner_color = (0, 255, 0)
@@ -694,9 +751,18 @@ class GameManager:
             winner_text = "DRAW!"
             winner_color = (255, 255, 0)
         
-        winner_size = cv2.getTextSize(winner_text, cv2.FONT_HERSHEY_SIMPLEX, 4.0, 8)[0]
-        winner_x = (frame_width - winner_size[0]) // 2
-        draw_text(frame, winner_text, (winner_x, frame_height // 2), font_scale=4.0, thickness=8, color=winner_color)
+        try:
+            font = ImageFont.truetype(config.FONT_PATH, 120)
+            bbox = font.getbbox(winner_text)
+            winner_width = bbox[2] - bbox[0]
+            winner_x = (frame_width - winner_width) // 2
+        except:
+            winner_x = frame_width // 2 - 250
+        
+        # Cached rendering for speed
+        draw_text_with_font(frame, winner_text, (winner_x, frame_height // 2 - 50), 
+                          config.FONT_PATH, 120, 
+                          color=winner_color, outline=True, outline_width=3)
         
         # Final stats
         stats_y = frame_height // 2 + 150
