@@ -1,6 +1,6 @@
 # Shadow Boxing — Game Boxing Interactive Mediapipe
 
-_“”_
+_“Boxing with mediapipe🥊”_
 
 ---
 
@@ -27,11 +27,15 @@ Sistem menggunakan MediaPipe untuk mendeteksi elemen-elemen tubuh penting sepert
 | Tanggal    | Kegiatan                                                           | Hasil / Progress Pekerjaan                                                         |
 | ---------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
 | 10/28/2025 | Pembuatan Repositori github Shadow Boxing, dan pembagian pekerjaan | Repositori github tugas besar dan koordinasi tim terkait pembagian scope pekerjaan |
-| 11/9/2025 | Pemilihan Assets Fix & Rework FLow Game/Filter | Fiksasi assets (sound, filter, font), flow ui game |
+| 11/9/2025  | Pemilihan Assets Fix & Rework FLow Game/Filter                     | Fiksasi assets (sound, filter, font), flow ui game                                 |
+| 11/10/2024 | Implementasi Core Game Systems | System camera, MediaPipe detection, audio manager, visual effects |
+| 11/10/2024 | Implementasi Game Mechanics | Punch detection, defense system (block & dodge), hitbox collision, combo system |
+| 11/10/2024 | UI/UX Development | Menu system, HUD, pause screen, round transitions, game over screen dengan custom font |
+| 11/10/2024 | Difficulty System & Optimization | 3 level kesulitan (Easy/Medium/Hard), text caching untuk performance, fullscreen support |
 
 ---
 
-## 🎮 Cara Menggunakan
+## Cara Menggunakan
 
 ### Prerequisites
 - Python 3.10+
@@ -75,7 +79,7 @@ python main.py
 
 ---
 
-## 🕹️ Kontrol Game
+## Kontrol Game
 
 | Key | Action |
 |-----|--------|
@@ -85,7 +89,7 @@ python main.py
 
 ---
 
-## 🎯 Mekanik Game
+## Mekanik Game
 
 ### Fase Serangan Player (3 detik)
 - 2-4 kotak hitbox muncul secara random
@@ -108,7 +112,7 @@ python main.py
 
 ---
 
-## 🏗️ Struktur Project
+## Struktur Project
 
 ```
 shadow-boxing/
@@ -175,7 +179,7 @@ shadow-boxing/
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Masalah Kamera
 ```python
@@ -195,7 +199,7 @@ CAMERA_INDEX = 0  # Coba 0, 1, atau 2
 
 ---
 
-## 📦 Dependencies
+## Dependencies
 
 ```
 opencv-python==4.10.0.84
@@ -206,7 +210,22 @@ pygame==2.5.2
 
 ---
 
-## 📝 License
+## Credits
+
+**Development Team:**
+- **Aziz Kurniawan** - Base Game Logic, MediaPipe Tuning, Refactor, QA
+- **Harisya Miranti** - UI/UX, Visual Effects & Assets
+- **Muhammad Yusuf** - MediaPipe Integration & Flow Game
+
+**Technologies:**
+- MediaPipe by Google
+- OpenCV
+- Pygame Community
+- Python Software Foundation
+
+---
+
+## License
 
 This project is open source and available under the MIT License.
 
