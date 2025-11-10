@@ -206,17 +206,6 @@ pygame==2.5.2
 
 ---
 
-## 🚀 Fitur yang Akan Datang
-
-- [ ] Multiplayer mode
-- [ ] Lebih banyak pola serangan enemy
-- [ ] Power-ups dan special moves
-- [ ] Sistem leaderboard
-- [ ] Training mode
-- [ ] Custom character skins
-
----
-
 ## 📝 License
 
 This project is open source and available under the MIT License.
