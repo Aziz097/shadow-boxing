@@ -31,7 +31,7 @@ print("\n[3/6] Testing systems import...")
 try:
     from systems.camera_manager import CameraManager
     from systems.mediapipe_manager import MediaPipeManager
-    from systems.audio_manager import AudioManager
+    from systems.audio_system import AudioManager
     from systems.visual_effects import VisualEffectsManager
     print("✓ All systems imported successfully")
 except Exception as e:
