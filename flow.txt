@@ -1,0 +1,22 @@
+1. Hitbox
+2. Damage pengurangan random ketika player punch box yang disediakan random posisinya
+3. Bisa muncul banyak kotak sekaligus
+4. 3 detik waktu untuk memukul kotak (bisa random muncul box nya 2-4 box sekali muncul)
+5. Player mendapatkan red-dot serangan dari sistem by body lanmark arahkan ke index 0-10 body landmark
+6. Filter Helm
+7. Sound Punch
+8. Sound Round (3 Ronde) total 60 Detik
+9.  Setiap Ronde 20 detik
+10. Rest 10 detik -> autoplay ronde selanjutnya setelah 10 detik
+11. KO sound after round 3 (penentuan siapa yang menang)
+12. Punch sound (2 tipe ada yang biasa enemy/sistem, keras itu tinjuan playernya)
+13. Splash screen round 1,2,3 + sound
+14. Scoreboard after round 3 (menampilkan siapa yang menang berdasarkan total damage)
+15. Timer countdown di pojok kanan atas
+16. Tengah atas menampilkan ronde ke berapa dan waktu
+17. Health bar di pojok kanan atas (health box enemy/sistem)
+18. Health bar di pojok kiri bawah (health player)
+19. Ada settings info untuk mengatur difficulty (easy, medium, hard), Keybind info (spasi untuk mulai game, esc untuk pause menu, q untuk quit game)
+20. Pahami betul mediapipe settingan saya, jangan diubah basicnya
+21. Ada filter helm yang menempel di ujung kanan mata kiri dan kanan (8 dan 7) body landmark
+22. UI clean gunakan font daydream di assets saya

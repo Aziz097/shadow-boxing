@@ -164,15 +164,3 @@ def overlay_image_alpha(background: np.ndarray, overlay: np.ndarray,
             background[y:y+h, x:x+w] = overlay[:, :, :3] if len(overlay.shape) == 3 else overlay
     
     return background
-
-
-def create_rounded_rectangle_mask(width: int, height: int, radius: int) -> np.ndarray:
-    """Create a mask for rounded rectangle."""
-    mask = np.zeros((height, width), dtype=np.uint8)
-    cv2.rectangle(mask, (radius, 0), (width - radius, height), 255, -1)
-    cv2.rectangle(mask, (0, radius), (width, height - radius), 255, -1)
-    cv2.circle(mask, (radius, radius), radius, 255, -1)
-    cv2.circle(mask, (width - radius, radius), radius, 255, -1)
-    cv2.circle(mask, (radius, height - radius), radius, 255, -1)
-    cv2.circle(mask, (width - radius, height - radius), radius, 255, -1)
-    return mask
