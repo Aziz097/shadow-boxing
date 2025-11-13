@@ -81,8 +81,6 @@ class InputProcessor:
                             game_state.combo_count = hit_result['combo']
                             game_state.score += hit_result['damage'] * hit_result['combo']
                             
-                            print(f"[HIT] Combo {hit_result['combo']}x - Damage: {hit_result['damage']} - Enemy Health: {game_state.enemy_health}")
-                            
                             # Trigger VFX
                             if not hasattr(game_state, 'vfx_hits'):
                                 game_state.vfx_hits = []

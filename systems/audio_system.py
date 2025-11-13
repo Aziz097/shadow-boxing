@@ -7,7 +7,6 @@ class AudioSystem:
         self.config = game_config
         pygame.mixer.init()
         
-        # Load sound effects dengan path yang benar
         self.sounds = {
             'bell': self._load_sound("boxing-bell.mp3"),
             'ko': self._load_sound("KO.mp3"),
@@ -19,65 +18,50 @@ class AudioSystem:
             'round_3': self._load_sound(os.path.join("round", "round-3.mp3"))
         }
         
-        # Load background music
         self.music = {
             'menu': os.path.join(self.config.MUSIC_DIR, "menu_music.mp3"),
             'fight': os.path.join(self.config.MUSIC_DIR, "fight_music.mp3"),
             'ko': os.path.join(self.config.MUSIC_DIR, "ko_music.mp3")
         }
-        
-        print("Audio system initialized with sounds:", list(self.sounds.keys()))
     
     def _load_sound(self, filename):
-        """Load sound with error handling"""
-        # Handle subdirectories
         if isinstance(filename, tuple):
             path = os.path.join(self.config.SFX_DIR, *filename)
         else:
             path = os.path.join(self.config.SFX_DIR, filename)
         
-        if os.path.exists(path):
-            try:
-                return pygame.mixer.Sound(path)
-            except Exception as e:
-                print(f"Warning: Failed to load sound {path}: {str(e)}")
-                return None
-        else:
+        if not os.path.exists(path):
             print(f"Warning: Sound file not found: {path}")
+            return None
+            
+        try:
+            return pygame.mixer.Sound(path)
+        except Exception as e:
+            print(f"Warning: Failed to load sound {path}: {str(e)}")
             return None
     
     def play_sound(self, sound_name, volume=1.0):
-        """Play sound effect"""
-        if sound_name in self.sounds and self.sounds[sound_name]:
-            try:
-                self.sounds[sound_name].set_volume(volume)
-                self.sounds[sound_name].play()
-                print(f"Playing sound: {sound_name}")
-            except Exception as e:
-                print(f"Error playing sound {sound_name}: {str(e)}")
-        else:
-            print(f"Sound not found or not loaded: {sound_name}")
+        if sound_name not in self.sounds or not self.sounds[sound_name]:
+            return
+            
+        self.sounds[sound_name].set_volume(volume)
+        self.sounds[sound_name].play()
+    
+    def preload_music(self, music_name):
+        pass
     
     def play_music(self, music_name, volume=0.5, loops=-1):
-        """Play background music"""
-        if music_name in self.music:
-            music_path = self.music[music_name]
-            if os.path.exists(music_path):
-                try:
-                    pygame.mixer.music.load(music_path)
-                    pygame.mixer.music.set_volume(volume)
-                    pygame.mixer.music.play(loops)
-                    print(f"Playing music: {music_name}")
-                except Exception as e:
-                    print(f"Error playing music {music_name}: {str(e)}")
-            else:
-                print(f"Music file not found: {music_path}")
-        else:
-            print(f"Music not found: {music_name}")
+        if music_name not in self.music:
+            return
+            
+        music_path = self.music[music_name]
+        if not os.path.exists(music_path):
+            print(f"Music file not found: {music_path}")
+            return
+            
+        pygame.mixer.music.load(music_path)
+        pygame.mixer.music.set_volume(volume)
+        pygame.mixer.music.play(loops)
     
     def stop_music(self):
-        """Stop background music"""
-        try:
-            pygame.mixer.music.stop()
-        except Exception as e:
-            print(f"Error stopping music: {str(e)}")
+        pygame.mixer.music.stop()

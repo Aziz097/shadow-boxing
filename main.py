@@ -1,5 +1,9 @@
 import warnings
 import os
+
+# Suppress pygame welcome message
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
+
 import pygame
 import cv2
 import time
@@ -31,12 +35,6 @@ def main():
     # Initialize configuration
     game_config = Config()
     
-    # Debug font path
-    print(f"=== CONFIG DEBUG ===")
-    print(f"FONT_PATH: {game_config.FONT_PATH}")
-    print(f"Font exists: {os.path.exists(game_config.FONT_PATH)}")
-    print(f"Font directory exists: {os.path.exists(game_config.FONT_DIR)}")
-    
     # Initialize systems
     vision_system = VisionSystem(game_config)
     audio_system = AudioSystem(game_config)
@@ -60,24 +58,18 @@ def main():
     running = True
     last_update_time = time.time()
     clock = pygame.time.Clock()
-    last_camera_frame = None
     
-    # Play menu music
-    try:
-        audio_system.play_music("menu", 0.5)
-    except Exception as e:
-        print(f"Error playing menu music: {str(e)}")
+    audio_system.preload_music("ko")
+    audio_system.play_music("menu", 0.5)
     
     while running:
         current_time = time.time()
         delta_time = current_time - last_update_time
         last_update_time = current_time
         
-        # Get camera frame
         vision_data = vision_system.get_frame()
         if vision_data is None:
             continue
-        last_camera_frame = vision_data['frame']
         
         # Handle Pygame events
         pygame_event = render_system.handle_events()
@@ -101,39 +93,25 @@ def main():
             # Let menu system handle input
             menu_command = menu_system.handle_input(keys)
             if menu_command == "START":
-                # Start game
                 game_state.start_game()
-                show_round_overlay = True
                 fight_overlay.show_round_start(1)
                 
-                # Stop menu music and play fight music
-                try:
-                    audio_system.stop_music()
-                    audio_system.play_music("fight", 0.3)
-                except Exception as e:
-                    print(f"Error changing music: {str(e)}")
+                audio_system.stop_music()
+                audio_system.play_music("fight", 0.3)
             elif menu_command == "QUIT":
                 running = False
             elif keys[pygame.K_ESCAPE]:
                 running = False
         
         elif game_state.current_state == constants.GAME_STATES['ROUND_SPLASH']:
-            # Play round sound once
             if not hasattr(game_state, 'round_sound_played') or not game_state.round_sound_played:
-                try:
-                    round_sound = f"round_{game_state.current_round}"
-                    audio_system.play_sound(round_sound)
-                    game_state.round_sound_played = True
-                except Exception as e:
-                    print(f"Error playing round sound: {str(e)}")
+                round_sound = f"round_{game_state.current_round}"
+                audio_system.play_sound(round_sound)
+                game_state.round_sound_played = True
             
-            # Wait for overlay to finish
             if not fight_overlay.is_active():
                 game_state.start_round(game_state.current_round)
-                try:
-                    audio_system.play_sound("bell")
-                except Exception as e:
-                    print(f"Error playing bell sound: {str(e)}")
+                audio_system.play_sound("bell")
         
         elif game_state.current_state == constants.GAME_STATES['PLAYING']:
             # Process input
@@ -149,46 +127,23 @@ def main():
             # Update game state (phase transitions, timers, etc)
             game_state.update(current_time, vision_system)
             
-            # Check if KO effect just started (play SFX once)
             if game_state.ko_effect_active:
                 if not hasattr(game_state, 'ko_sfx_played') or not game_state.ko_sfx_played:
-                    try:
-                        audio_system.play_sound("ko", 1.0)
-                        print("[AUDIO] Playing KO sound effect")
-                        game_state.ko_sfx_played = True
-                    except Exception as e:
-                        print(f"Error playing KO sound: {str(e)}")
+                    audio_system.play_sound("ko", 1.0)
+                    game_state.ko_sfx_played = True
                 
-                # Check if KO effect finished and should transition to GAME_OVER
                 if current_time - game_state.ko_start_time >= game_state.ko_duration:
                     if not game_state.result_shown:
-                        print("[KO] Effect complete, transitioning to GAME_OVER")
                         game_state.current_state = constants.GAME_STATES['GAME_OVER']
                         result_screen.show(game_state.player_won, game_state.score)
                         game_state.result_shown = True
-                        try:
-                            audio_system.stop_music()
-                            audio_system.play_music("ko", 0.5)
-                            print("[AUDIO] Playing KO music")
-                        except Exception as e:
-                            print(f"Error playing KO music: {str(e)}")
-                # Skip rest of PLAYING logic during KO effect
-                continue
+                        audio_system.stop_music()
+                        audio_system.play_music("ko", 0.5)
             
-            # Update player and enemy
+            # Update player and enemy (even during KO to keep rendering smooth)
             player.health = game_state.player_health
             enemy.health = game_state.enemy_health
             player.score = game_state.score
-            
-            # Check for round end (only if not already in KO effect)
-            if not game_state.ko_effect_active:
-                if game_state.round_timer <= 0 and game_state.current_round >= game_config.NUM_ROUNDS:
-                    # Trigger KO effect
-                    game_state.ko_effect_active = True
-                    game_state.ko_start_time = current_time
-                    game_state.ko_sfx_played = False  # Reset flag for SFX
-                    game_state.player_won = player.health > enemy.health
-                    print("[ROUND END] Triggering KO effect before result screen")
         
         elif game_state.current_state == constants.GAME_STATES['REST']:
             # Store vision data for helm rendering during rest
@@ -210,21 +165,16 @@ def main():
                     game_state.ko_start_time = current_time
                     game_state.ko_sfx_played = False
                     game_state.player_won = player.health > enemy.health
-                    print("[ALL ROUNDS END] Triggering KO effect before result screen")
         
         elif game_state.current_state == constants.GAME_STATES['GAME_OVER']:
             if command == "SPACE" or keys[pygame.K_RETURN]:
-                # Restart game
                 player = Player(game_config)
                 enemy = Enemy(game_config)
                 round_manager = RoundManager(game_config)
                 game_state = GameState(game_config)
                 game_state.current_state = constants.GAME_STATES['MENU']
-                try:
-                    audio_system.play_music("menu", 0.5)
-                except Exception as e:
-                    print(f"Error restarting music: {str(e)}")
-            elif pygame_event == False:  # Q or ESC
+                audio_system.play_music("menu", 0.5)
+            elif pygame_event == False:
                 running = False
         
         # Update game_state timers

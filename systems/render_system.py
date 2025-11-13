@@ -33,38 +33,56 @@ class RenderSystem:
     def _initialize_display(self):
         """Initialize pygame display"""
         pygame.init()
+        # Use DOUBLEBUF for better performance
+        flags = pygame.DOUBLEBUF
         if self.config.FULLSCREEN:
-            self.screen = pygame.display.set_mode((self.config.WINDOW_WIDTH, self.config.WINDOW_HEIGHT), pygame.FULLSCREEN)
+            flags |= pygame.FULLSCREEN
+            self.screen = pygame.display.set_mode((self.config.WINDOW_WIDTH, self.config.WINDOW_HEIGHT), flags)
         else:
-            self.screen = pygame.display.set_mode((self.config.WINDOW_WIDTH, self.config.WINDOW_HEIGHT))
+            self.screen = pygame.display.set_mode((self.config.WINDOW_WIDTH, self.config.WINDOW_HEIGHT), flags)
         pygame.display.set_caption("Shadow Boxing")
     
     def _load_assets(self):
-        """Load all visual assets with fallbacks"""
-        # Load punch bags
-        self.punch_bag_red = self._load_asset("punch-bag-red.png", (150, 180))
-        self.punch_bag_blue = self._load_asset("punch-bag-blue.png", (150, 180))
-        self.punch_bag_black = self._load_asset("punch-bag-black.png", (150, 180))
+        """Load critical visual assets only, defer non-critical assets"""
         
-        # Load other assets
+        # Load only critical assets at startup
         self.helm_image = self._load_asset("boxing-helm.png", (120, 120))
-        self.glove_image = self._load_asset("boxing_glove.png", (80, 80))
-        self.target_icon = self._load_asset("target-icon.png", (60, 60))
         self.ko_sprite = self._load_asset("ko.png", (500, 300))  # KO sprite for knockout effect
         
-        # Log KO sprite status
-        if self.ko_sprite is not None:
-            print(f"[ASSETS] KO sprite loaded successfully - Shape: {self.ko_sprite.shape}")
-        else:
-            print(f"[ASSETS] WARNING: KO sprite failed to load, will use text fallback")
+        # Lazy load flags for non-critical assets
+        self._punch_bags_loaded = False
+        self._attack_assets_loaded = False
         
-        # Ensure we have at least placeholder images
-        if self.punch_bag_red is None:
-            self.punch_bag_red = self._create_placeholder_bag((150, 180), (0, 0, 255))
-        if self.punch_bag_blue is None:
-            self.punch_bag_blue = self._create_placeholder_bag((150, 180), (255, 0, 0))
-        if self.punch_bag_black is None:
-            self.punch_bag_black = self._create_placeholder_bag((150, 180), (50, 50, 50))
+        # Placeholders
+        self.punch_bag_red = None
+        self.punch_bag_blue = None
+        self.punch_bag_black = None
+        self.glove_image = None
+        self.target_icon = None
+    
+    def _ensure_punch_bags_loaded(self):
+        """Lazy load punch bag assets when needed"""
+        if not self._punch_bags_loaded:
+            self.punch_bag_red = self._load_asset("punch-bag-red.png", (150, 180))
+            self.punch_bag_blue = self._load_asset("punch-bag-blue.png", (150, 180))
+            self.punch_bag_black = self._load_asset("punch-bag-black.png", (150, 180))
+            
+            # Ensure we have at least placeholder images
+            if self.punch_bag_red is None:
+                self.punch_bag_red = self._create_placeholder_bag((150, 180), (0, 0, 255))
+            if self.punch_bag_blue is None:
+                self.punch_bag_blue = self._create_placeholder_bag((150, 180), (255, 0, 0))
+            if self.punch_bag_black is None:
+                self.punch_bag_black = self._create_placeholder_bag((150, 180), (50, 50, 50))
+            
+            self._punch_bags_loaded = True
+    
+    def _ensure_attack_assets_loaded(self):
+        """Lazy load attack assets when needed"""
+        if not self._attack_assets_loaded:
+            self.glove_image = self._load_asset("boxing_glove.png", (80, 80))
+            self.target_icon = self._load_asset("target-icon.png", (60, 60))
+            self._attack_assets_loaded = True
     
     def _load_asset(self, filename, size=None):
         """Load asset with proper alpha channel handling"""
@@ -357,51 +375,6 @@ class RenderSystem:
         
         return frame
     
-    def _render_enemy_attack(self, game_state):
-        """Render enemy glove flying toward target"""
-        if self.glove_image is None or self.target_icon is None:
-            return
-        
-        # Get target position (nose landmark)
-        if game_state.enemy_target:
-            target_x, target_y = game_state.enemy_target
-            
-            # Convert to screen coordinates
-            target_x = int(target_x * self.config.WINDOW_WIDTH / self.config.CAMERA_WIDTH)
-            target_y = int(target_y * self.config.WINDOW_HEIGHT / self.config.CAMERA_HEIGHT)
-            
-            # Render target icon
-            try:
-                target_surface = pygame.surfarray.make_surface(cv2.cvtColor(self.target_icon, cv2.COLOR_BGRA2RGBA))
-                self.screen.blit(target_surface, (target_x - 30, target_y - 30))
-            except Exception as e:
-                print(f"Error rendering target icon: {str(e)}")
-            
-            # Render flying glove
-            if game_state.glove_position:
-                glove_x, glove_y = game_state.glove_position
-                
-                # Interpolate position based on attack progress
-                progress = min(1.0, game_state.attack_progress)
-                current_x = int(glove_x + (target_x - glove_x) * progress)
-                current_y = int(glove_y + (target_y - glove_y) * progress)
-                
-                # Scale glove based on distance
-                scale = 1.0 - progress * 0.5
-                try:
-                    glove_surface = pygame.surfarray.make_surface(cv2.cvtColor(self.glove_image, cv2.COLOR_BGRA2RGBA))
-                    scaled_glove = pygame.transform.scale(
-                        glove_surface,
-                        (int(80 * scale), int(80 * scale))
-                    )
-                    self.screen.blit(scaled_glove, (current_x - 40, current_y - 40))
-                except Exception as e:
-                    print(f"Error rendering glove: {str(e)}")
-                
-                # Add motion blur particles
-                if progress < 0.8:
-                    self._add_particles(current_x, current_y, 5, (255, 165, 0))
-    
     def _render_player_attack_phase(self, game_state):
         """Render hitboxes as punch bags during player attack phase"""
         current_time = time.time()
@@ -499,8 +472,12 @@ class RenderSystem:
         
         # Use ko.png sprite if available, otherwise fallback to text
         if self.ko_sprite is not None:
-            # Pulsing scale effect for KO sprite
-            pulse_scale = 1.0 + 0.3 * abs(math.sin(elapsed * 4))  # Pulse between 1.0 and 1.3 (more dramatic)
+            # Cache scaled sprites for better performance
+            if not hasattr(self, '_ko_sprite_cache'):
+                self._ko_sprite_cache = {}
+            
+            # Pulsing scale effect for KO sprite (simplified for performance)
+            pulse_scale = 1.0 + 0.15 * abs(math.sin(elapsed * 3))  # Reduced pulse range
             
             # Calculate size with pulse - LARGER base size for better visibility
             base_width = 600
@@ -508,11 +485,20 @@ class RenderSystem:
             sprite_width = int(base_width * pulse_scale)
             sprite_height = int(base_height * pulse_scale)
             
-            # Resize sprite with current scale
+            # Use cached sprite if size matches, otherwise resize
+            cache_key = f"{sprite_width}x{sprite_height}"
+            if cache_key not in self._ko_sprite_cache:
+                try:
+                    ko_surface = cv2.resize(self.ko_sprite, (sprite_width, sprite_height), interpolation=cv2.INTER_LINEAR)
+                    ko_rgba = cv2.cvtColor(ko_surface, cv2.COLOR_BGRA2RGBA)
+                    self._ko_sprite_cache[cache_key] = pygame.image.frombuffer(ko_rgba.tobytes(), (sprite_width, sprite_height), "RGBA")
+                except Exception:
+                    pass
+                    self._render_ko_text_fallback(elapsed, progress)
+                    return
+            
             try:
-                ko_surface = cv2.resize(self.ko_sprite, (sprite_width, sprite_height))
-                ko_rgba = cv2.cvtColor(ko_surface, cv2.COLOR_BGRA2RGBA)
-                ko_pygame = pygame.image.frombuffer(ko_rgba.tobytes(), (sprite_width, sprite_height), "RGBA")
+                ko_pygame = self._ko_sprite_cache[cache_key]
                 
                 # Slight shake effect in first 0.5 seconds
                 shake_x = int(15 * math.sin(elapsed * 20)) if progress < 0.2 else 0
@@ -534,8 +520,8 @@ class RenderSystem:
                     self.screen.blit(flash_overlay, (0, 0))
                 
                 self.screen.blit(ko_pygame, (sprite_x, sprite_y))
-            except Exception as e:
-                print(f"[KO EFFECT] Error rendering sprite: {e}")
+            except Exception:
+                pass
                 # Fallback to text if sprite fails
                 self._render_ko_text_fallback(elapsed, progress)
         else:
@@ -636,6 +622,9 @@ class RenderSystem:
         if not hasattr(game_state, 'hitbox_system'):
             return
         
+        # Lazy load punch bag assets
+        self._ensure_punch_bags_loaded()
+        
         hitboxes = game_state.hitbox_system.get_all_hitboxes()
         current_time = time.time()
         
@@ -702,6 +691,9 @@ class RenderSystem:
     
     def _render_enemy_attack(self, game_state):
         """Render enemy attack dengan target icon dan glove animation"""
+        # Lazy load attack assets
+        self._ensure_attack_assets_loaded()
+        
         if not hasattr(game_state, 'enemy_attack_system'):
             return
         

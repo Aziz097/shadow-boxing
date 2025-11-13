@@ -110,26 +110,23 @@ class GameState:
         """Update during active gameplay with phase transitions"""
         # Check if either player is KO'd (trigger KO effect)
         if self.player_health <= 0 and not self.ko_effect_active:
-            print(f"[KO] Player knocked out! Starting KO effect...")
             self.ko_effect_active = True
             self.ko_start_time = current_time
-            self.ko_sfx_played = False  # Reset for SFX
+            self.ko_sfx_played = False
             self.player_won = False
             return
         
         if self.enemy_health <= 0 and not self.ko_effect_active:
-            print(f"[KO] Enemy knocked out! Starting KO effect...")
             self.ko_effect_active = True
             self.ko_start_time = current_time
-            self.ko_sfx_played = False  # Reset for SFX
+            self.ko_sfx_played = False
             self.player_won = True
             return
         
         # Check if KO effect finished
         if self.ko_effect_active:
             if current_time - self.ko_start_time >= self.ko_duration:
-                print(f"[KO] Effect duration complete")
-                # Don't call game_over here - let main.py handle transition
+                pass
             return
         
         # Update timers
@@ -142,8 +139,12 @@ class GameState:
                 self.rest_timer = self.config.REST_DURATION
                 self.rest_start_time = current_time
             else:
-                player_won = self.player_health > self.enemy_health
-                self.game_over(player_won)
+                # Final round ended - trigger KO effect
+                if not self.ko_effect_active:
+                    self.ko_effect_active = True
+                    self.ko_start_time = current_time
+                    self.ko_sfx_played = False
+                    self.player_won = self.player_health > self.enemy_health
             return
         
         # Phase transitions
@@ -164,12 +165,16 @@ class GameState:
                 
                 # Check if enemy still alive before starting attack
                 if self.enemy_health <= 0:
-                    print(f"[GAME OVER] Enemy health depleted!")
-                    self.game_over(True)  # Player won
+                    self.game_over(True)
                     return
                 
-                # Start enemy attack
-                self.enemy_attack_system.start_attack(self.face_bbox, current_time, self.pose_landmarks)
+                # Start enemy attack (with face bbox or pose landmarks fallback)
+                if self.face_bbox is not None or self.pose_landmarks is not None:
+                    self.enemy_attack_system.start_attack(self.face_bbox, current_time, self.pose_landmarks)
+                else:
+                    self.phase = constants.PHASE_STATES['PLAYER_ATTACK']
+                    self.phase_start_time = current_time
+                    self.hitbox_system.generate_hitboxes(face_bbox=self.face_bbox)
         
         elif self.phase == constants.PHASE_STATES['ENEMY_ATTACK_WARNING']:
             # Warning phase - target icon visible
@@ -177,9 +182,7 @@ class GameState:
             attack_result = self.enemy_attack_system.update(current_time, self.defense_active, self.face_bbox)
             
             if not self.enemy_attack_system.is_warning:
-                # Transitioned to attack phase
                 self.phase = constants.PHASE_STATES['ENEMY_ATTACK']
-                print(f"[DEBUG] Transitioning to ENEMY_ATTACK phase, glove should appear now!")
         
         elif self.phase == constants.PHASE_STATES['ENEMY_ATTACK']:
             # Update enemy attack system
@@ -197,13 +200,11 @@ class GameState:
                 
                 # Check if combo continues or ends
                 if attack_result.get('combo_continues', False):
-                    # Combo continues - stay in ENEMY_ATTACK phase
-                    print(f"[COMBO] Waiting for next attack...")
+                    pass
                 else:
                     # Combo complete - check if player still alive
                     if self.player_health <= 0:
-                        print(f"[GAME OVER] Player health depleted!")
-                        self.game_over(False)  # Player lost
+                        self.game_over(False)
                         return
                     
                     # Reset to player attack phase

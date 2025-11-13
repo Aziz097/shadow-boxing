@@ -36,7 +36,6 @@ class HitBoxSystem:
                 'x2': min(self.config.CAMERA_WIDTH, face_x + face_w + 100),
                 'y2': min(self.config.CAMERA_HEIGHT, face_y + face_h + 100)
             }
-            print(f"[HITBOX] Face exclusion zone: {face_zone}")
         
         max_attempts = 100  # Prevent infinite loop
         attempts = 0
@@ -93,7 +92,6 @@ class HitBoxSystem:
                     }
                     self.active_hitboxes.append(hitbox)
                     placed = True
-                    print(f"[HITBOX] Placed hitbox {i} at ({center_x}, {center_y})")
     
     def check_hit(self, hand_x, hand_y, is_fist):
         """Check if fist punch hits any active hitbox (circle collision)"""
