@@ -139,11 +139,17 @@ class GameState:
                 self.rest_timer = self.config.REST_DURATION
                 self.rest_start_time = current_time
             else:
-                # Final round ended - trigger KO effect
-                if not self.ko_effect_active:
-                    self.ko_effect_active = True
-                    self.ko_start_time = current_time
-                    self.ko_sfx_played = False
+                # Final round ended - go directly to result screen
+                # Only trigger KO effect if someone's HP is 0
+                if self.player_health <= 0 or self.enemy_health <= 0:
+                    if not self.ko_effect_active:
+                        self.ko_effect_active = True
+                        self.ko_start_time = current_time
+                        self.ko_sfx_played = False
+                        self.player_won = self.player_health > self.enemy_health
+                else:
+                    # No knockout - direct to result screen
+                    self.current_state = constants.GAME_STATES['GAME_OVER']
                     self.player_won = self.player_health > self.enemy_health
             return
         
@@ -193,10 +199,13 @@ class GameState:
                 damage = attack_result['damage']
                 self.player_health = max(0, self.player_health - damage)  # Prevent negative health
                 
-                if attack_result['was_defended']:
-                    print(f"Enemy attack DEFENDED! Damage reduced to {damage}")
-                else:
-                    print(f"Enemy attack HIT! Damage: {damage}")
+                # Play appropriate sound based on attack result
+                if attack_result.get('was_dodged', False):
+                    self.play_sound('enemy-punch-missed')
+                elif attack_result.get('was_defended', False):
+                    self.play_sound('enemy-punch-bloked')
+                elif damage > 0:
+                    self.play_sound('enemy-punch')
                 
                 # Check if combo continues or ends
                 if attack_result.get('combo_continues', False):

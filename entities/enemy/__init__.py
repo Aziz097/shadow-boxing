@@ -1,5 +1,5 @@
 from .enemy import Enemy
 from .ai_controller import AIController
-from .attack_patterns import AttackPatterns
+from .enemy_attack_system import EnemyAttackSystem
 
-__all__ = ['Enemy', 'AIController', 'AttackPatterns']
+__all__ = ['Enemy', 'AIController', 'EnemyAttackSystem']

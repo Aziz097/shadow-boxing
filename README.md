@@ -116,43 +116,64 @@ python main.py
 
 ```
 shadow-boxing/
-├── main.py                      # Entry point
-├── config.py                    # Konfigurasi game
-├── utils.py                     # Fungsi utility
-├── requirements.txt             # Dependencies
+├── main.py                      # Entry point game
+├── requirements.txt             # Python dependencies
+├── README.md                    # Dokumentasi
 │
-├── game/                        # Core game logic
-│   ├── game_manager.py          # Main game loop
-│   └── __init__.py
-│
-├── player/                      # Komponen player
-│   ├── player.py                # State player
-│   ├── punch_detector.py        # Deteksi pukulan
-│   ├── defense_detector.py      # Deteksi defense
-│   └── __init__.py
-│
-├── enemy/                       # Enemy AI
-│   ├── enemy.py                 # State enemy
-│   ├── enemy_attack.py          # Pola serangan
+├── core/                        # Core configurations
+│   ├── config.py                # Game settings
+│   ├── constants.py             # Game constants
+│   ├── math_utils.py            # Math utilities
+│   ├── utils.py                 # Helper functions
 │   └── __init__.py
 │
 ├── systems/                     # Core systems
-│   ├── camera_manager.py        # Webcam handling
-│   ├── mediapipe_manager.py     # Motion tracking
-│   ├── audio_manager.py         # Sound system
-│   ├── visual_effects.py        # VFX rendering
+│   ├── vision_system.py         # MediaPipe integration
+│   ├── audio_system.py          # Sound & music manager
+│   ├── render_system.py         # Graphics rendering
+│   ├── input_processor.py       # Punch & defense detection
 │   └── __init__.py
 │
-├── ui/                          # UI components
-│   ├── menu.py                  # Main menu
-│   ├── hud.py                   # In-game HUD
-│   ├── scoreboard.py            # End game screen
+├── entities/                    # Game entities
+│   ├── player/                  # Player components
+│   │   ├── player.py            # Player state
+│   │   └── __init__.py
+│   └── enemy/                   # Enemy components
+│       ├── enemy.py             # Enemy state
+│       ├── ai_controller.py     # AI behavior
+│       ├── enemy_attack_system.py # Attack mechanics
+│       └── __init__.py
+│
+├── game/                        # Game logic
+│   ├── game_state.py            # Game state manager
+│   ├── hit_box_system.py        # Hitbox collision
+│   └── __init__.py
+│
+├── ui/                          # User interface
+│   ├── menu_system.py           # Main menu
+│   ├── hud_renderer.py          # In-game HUD
+│   ├── fight_overlay.py         # Round transitions
+│   ├── result_screen.py         # Game over screen
 │   └── __init__.py
 │
 └── assets/                      # Game assets
-    ├── font/
-    ├── image/
-    └── sfx/
+    ├── font/                    # Custom fonts
+    │   └── PressStart2P.ttf
+    ├── sprites/                 # Game images
+    │   ├── boxing-helm.png
+    │   ├── boxing_glove.png
+    │   ├── target-icon.png
+    │   ├── ko.png
+    │   └── punch-bag-*.png
+    ├── sfx/                     # Sound effects
+    │   ├── KO.mp3
+    │   ├── player-punch.mp3
+    │   ├── enemy-punch*.mp3
+    │   └── round/*.mp3
+    └── music/                   # Background music
+        ├── menu_music.mp3
+        ├── fight_music.mp3
+        └── ko_music.mp3
 ```
 
 ---

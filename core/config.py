@@ -30,8 +30,8 @@ class Config:
     # === Round Settings ===
     NUM_ROUNDS = 3
     ROUND_DURATION = 20  # seconds per round
-    REST_DURATION = 10   # seconds between rounds
-    SPLASH_DURATION = 2  # seconds for round splash screen
+    REST_DURATION = 5   # seconds between rounds
+    SPLASH_DURATION = 3  # seconds for round splash screen
     
     # === Hitbox Settings ===
     MIN_HITBOXES = 2

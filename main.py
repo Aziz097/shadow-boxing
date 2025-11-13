@@ -17,9 +17,7 @@ from systems.render_system import RenderSystem
 from systems.input_processor import InputProcessor
 from entities.player.player import Player
 from entities.enemy.enemy import Enemy
-from entities.enemy.ai_controller import AIController
 from entities.enemy.enemy_attack_system import EnemyAttackSystem
-from game.round_manager import RoundManager
 from game.game_state import GameState
 from ui.hud_renderer import HUDRenderer
 from ui.menu_system import MenuSystem
@@ -44,8 +42,6 @@ def main():
     # Initialize game entities
     player = Player(game_config)
     enemy = Enemy(game_config)
-    ai_controller = AIController(game_config, enemy)
-    round_manager = RoundManager(game_config)
     game_state = GameState(game_config)
     
     # Initialize UI components
@@ -127,6 +123,10 @@ def main():
             # Update game state (phase transitions, timers, etc)
             game_state.update(current_time, vision_system)
             
+            # Play queued sounds
+            for sound_name in game_state.get_active_sounds():
+                audio_system.play_sound(sound_name, 0.7)
+            
             if game_state.ko_effect_active:
                 if not hasattr(game_state, 'ko_sfx_played') or not game_state.ko_sfx_played:
                     audio_system.play_sound("ko", 1.0)
@@ -159,18 +159,20 @@ def main():
                     fight_overlay.show_round_start(game_state.current_round)
                     game_state.round_sound_played = False
                 else:
-                    # All rounds complete - trigger KO effect
-                    game_state.current_state = constants.GAME_STATES['PLAYING']  # Switch to PLAYING to show KO
-                    game_state.ko_effect_active = True
-                    game_state.ko_start_time = current_time
-                    game_state.ko_sfx_played = False
-                    game_state.player_won = player.health > enemy.health
+                    # All rounds complete - handled by game_state.py
+                    pass
         
         elif game_state.current_state == constants.GAME_STATES['GAME_OVER']:
+            # Show result screen if not already shown
+            if not hasattr(game_state, 'result_shown') or not game_state.result_shown:
+                result_screen.show(game_state.player_won, game_state.score)
+                game_state.result_shown = True
+                audio_system.stop_music()
+                audio_system.play_music("ko", 0.5)
+            
             if command == "SPACE" or keys[pygame.K_RETURN]:
                 player = Player(game_config)
                 enemy = Enemy(game_config)
-                round_manager = RoundManager(game_config)
                 game_state = GameState(game_config)
                 game_state.current_state = constants.GAME_STATES['MENU']
                 audio_system.play_music("menu", 0.5)

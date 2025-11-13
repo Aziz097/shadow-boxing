@@ -49,8 +49,8 @@ class EnemyAttackSystem:
             target_landmarks = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
             random_idx = random.choice(target_landmarks)
             
-            if random_idx < len(pose_landmarks.landmark):
-                landmark = pose_landmarks.landmark[random_idx]
+            if random_idx < len(pose_landmarks):
+                landmark = pose_landmarks[random_idx]
                 target_x = int(landmark.x * self.config.CAMERA_WIDTH)
                 target_y = int(landmark.y * self.config.CAMERA_HEIGHT)
             else:
@@ -147,13 +147,16 @@ class EnemyAttackSystem:
                     else:
                         player_dodged = True
                 
-                # Calculate final damage
+                # Calculate final damage and play appropriate sound
                 if player_dodged:
                     final_damage = 0  # Complete dodge
+                    # Sound will be played in game_state when registering attack result
                 elif self.was_defended_during_attack:
                     final_damage = int(self.attack_damage * 0.2)
+                    # Sound will be played in game_state when registering attack result
                 else:
                     final_damage = self.attack_damage
+                    # Sound will be played in game_state when registering attack result
                 
                 # Check if combo continues
                 if self.combo_count < self.combo_max:

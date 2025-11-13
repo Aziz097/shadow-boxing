@@ -17,7 +17,7 @@ class FightOverlay:
         self.round_surfaces = {
             1: self._load_round_surface("round-1.png"),
             2: self._load_round_surface("round-2.png"),
-            3: self._load_round_surface("round-3.png")
+            3: self._load_round_surface("final-round.png")
         }
         
         # Load FIGHT image

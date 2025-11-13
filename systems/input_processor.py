@@ -69,10 +69,11 @@ class InputProcessor:
                 
                 # Process based on game phase
                 if game_state.phase == constants.PHASE_STATES['PLAYER_ATTACK']:
-                    # Player attack - check for punch hits
+                    # Player attack - check for punch hits using landmark 9 (middle_finger_mcp)
                     if is_fist and hasattr(game_state, 'hitbox_system'):
+                        # Use landmark 9 for more accurate hit detection
                         hit_result = game_state.hitbox_system.check_hit(
-                            hand_pos[0], hand_pos[1], is_fist
+                            landmark_9_pos[0], landmark_9_pos[1], is_fist
                         )
                         
                         if hit_result:
@@ -80,6 +81,9 @@ class InputProcessor:
                             game_state.enemy_health = max(0, game_state.enemy_health - hit_result['damage'])
                             game_state.combo_count = hit_result['combo']
                             game_state.score += hit_result['damage'] * hit_result['combo']
+                            
+                            # Play player punch sound
+                            game_state.play_sound('player-punch')
                             
                             # Trigger VFX
                             if not hasattr(game_state, 'vfx_hits'):

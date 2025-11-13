@@ -8,14 +8,14 @@ class AudioSystem:
         pygame.mixer.init()
         
         self.sounds = {
-            'bell': self._load_sound("boxing-bell.mp3"),
             'ko': self._load_sound("KO.mp3"),
-            'weak_punch': self._load_sound("weak-punch.mp3"),
-            'strong_punch': self._load_sound("strongpunch.mp3"),
-            'meme_punch': self._load_sound("punch-meme.mp3"),
-            'round_1': self._load_sound(os.path.join("round", "round-1.mp3")),
-            'round_2': self._load_sound(os.path.join("round", "round-2.mp3")),
-            'round_3': self._load_sound(os.path.join("round", "round-3.mp3"))
+            'player-punch': self._load_sound("player-punch.mp3"),
+            'enemy-punch': self._load_sound("enemy-punch.mp3"),
+            'enemy-punch-bloked': self._load_sound("punch-blocked.mp3"),
+            'enemy-punch-missed': self._load_sound("enemy-punch-missed.mp3"),
+            'round_1': self._load_sound(os.path.join("round", "round_1.mp3")),
+            'round_2': self._load_sound(os.path.join("round", "round_2.mp3")),
+            'round_3': self._load_sound(os.path.join("round", "final_round.mp3"))
         }
         
         self.music = {
