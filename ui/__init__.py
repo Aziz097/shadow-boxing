@@ -1,1 +1,1 @@
-"""UI package initialization"""
+# Package initialization

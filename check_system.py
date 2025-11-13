@@ -46,7 +46,7 @@ def check_assets():
     print("-" * 50)
     
     required_assets = [
-        'assets/font/daydream.otf',
+        'assets/font/PressStart2P.ttf',
         'assets/sfx/round/round-1.mp3',
         'assets/sfx/round/round-2.mp3',
         'assets/sfx/round/round-3.mp3',

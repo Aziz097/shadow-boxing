@@ -65,8 +65,10 @@ class Enemy:
                 self.glove_position = None
     
     def get_attack_damage(self):
-        """Get the damage of the current attack"""
-        return self.attack_damage
+        """Get the damage of the current attack with fallback"""
+        if hasattr(self, 'attack_damage'):
+            return self.attack_damage
+        return 15  # Default damage if not set
     
     def is_in_warning_phase(self):
         """Check if enemy is in warning phase"""

@@ -9,15 +9,17 @@ class Config:
     # === Paths ===
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     ASSETS_DIR = os.path.join(BASE_DIR, "assets")
-    FONT_DIR = os.path.join(ASSETS_DIR, "fonts")
+    FONT_DIR = os.path.join(ASSETS_DIR, "font")
     SPRITES_DIR = os.path.join(ASSETS_DIR, "sprites")
     SFX_DIR = os.path.join(ASSETS_DIR, "sfx")
     MUSIC_DIR = os.path.join(ASSETS_DIR, "music")
     
+    FONT_PATH = os.path.join(FONT_DIR, "PressStart2P.ttf") 
+    
     # === Game Settings ===
-    WINDOW_WIDTH = 1560
-    WINDOW_HEIGHT = 840
-    FPS = 60
+    WINDOW_WIDTH = 1280
+    WINDOW_HEIGHT = 720
+    FPS = 30
     FULLSCREEN = True
     
     # === Camera Settings ===
@@ -43,10 +45,12 @@ class Config:
     
     # === MediaPipe Settings ===
     HAND_MAX_NUM = 2
-    HAND_MIN_DETECTION_CONFIDENCE = 0.7
-    HAND_MIN_TRACKING_CONFIDENCE = 0.7
-    POSE_MIN_DETECTION_CONFIDENCE = 0.7
-    FACE_MIN_DETECTION_CONFIDENCE = 0.7
+    HAND_MIN_DETECTION_CONFIDENCE = 0.4
+    HAND_MIN_TRACKING_CONFIDENCE = 0.4
+    POSE_MIN_DETECTION_CONFIDENCE = 0.4
+    POSE_MIN_TRACKING_CONFIDENCE = 0.4
+    FACE_MIN_DETECTION_CONFIDENCE = 0.4
+    FACE_MIN_TRACKING_CONFIDENCE = 0.4
     
     # === Punch/Defense Settings ===
     FIST_ANGLE_THRESHOLD = 175

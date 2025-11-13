@@ -18,18 +18,94 @@ class RoundManager:
         self.glove_position = None
         self.attack_progress = 0
         
-    def start_round(self, current_time):
-        """Start a new round"""
-        self.current_round = min(self.current_round, self.config.NUM_ROUNDS)
-        self.round_start_time = current_time
-        self.is_rest_period = False
+    def start_round(self, round_num):
+        """Start a specific round with proper phase timing"""
+        self.current_state = constants.GAME_STATES['PLAYING']
+        self.current_round = round_num
         self.phase = constants.PHASE_STATES['PLAYER_ATTACK']
-        self.phase_start_time = current_time
+        self.combo_count = 0
+        self.active_hitboxes = self._generate_hitboxes()
+        self.hit_hitboxes = {}  # Clear previous hits
+        self.round_start_time = time.time()
+        self.phase_start_time = time.time()  # Reset phase timer
         
-        # Generate hitboxes for player attack phase
-        self._generate_hitboxes()
+        # Set player health based on previous round (for round 2+)
+        if round_num > 1:
+            self.player_health = max(1, self.player_health - 5)  # Small penalty
+
+    def _update_playing_state(self, current_time):
+        """Update during active gameplay"""
+        # Update timers
+        self.round_timer = max(0, self.config.ROUND_DURATION - (current_time - self.round_start_time))
         
-        return f"ROUND_{self.current_round}"
+        # Check for round end
+        if self.round_timer <= 0:
+            if self.current_round < self.config.NUM_ROUNDS:
+                self.current_state = constants.GAME_STATES['REST']
+                self.rest_timer = self.config.REST_DURATION
+                self.rest_start_time = current_time
+            else:
+                # Game over
+                player_won = self.player_health > self.enemy_health
+                self.game_over(player_won)
+        
+        # Update phase timer and transitions
+        phase_elapsed = current_time - self.phase_start_time
+        difficulty = self.config.get_difficulty_settings()
+        
+        if self.phase == constants.PHASE_STATES['PLAYER_ATTACK']:
+            # Player has limited time to hit targets
+            player_attack_time = difficulty["player_attack_time"]
+            if phase_elapsed >= player_attack_time:
+                # Calculate damage from hit hitboxes
+                damage = self._calculate_combo_damage(len(self.hit_hitboxes))
+                self.enemy_health = max(0, self.enemy_health - damage)
+                self.score += damage
+                
+                # Transition to enemy attack warning
+                self.phase = constants.PHASE_STATES['ENEMY_ATTACK_WARNING']
+                self.phase_start_time = current_time
+                self.enemy_target = self._select_enemy_target()
+        
+        elif self.phase == constants.PHASE_STATES['ENEMY_ATTACK_WARNING']:
+            # Enemy is about to attack - show target
+            warning_time = difficulty["enemy_attack_warning"]
+            if phase_elapsed >= warning_time:
+                # Transition to actual enemy attack
+                self.phase = constants.PHASE_STATES['ENEMY_ATTACK']
+                self.phase_start_time = current_time
+                self.attack_progress = 0
+                self.enemy_damage_applied = True
+                
+                # Set glove starting position
+                if self.enemy_target:
+                    self.glove_position = (
+                        self.enemy_target[0],
+                        self.config.CAMERA_HEIGHT + 50  # Start below screen
+                    )
+        
+        elif self.phase == constants.PHASE_STATES['ENEMY_ATTACK']:
+            # Enemy is attacking - move glove toward target
+            attack_duration = 0.5  # 0.5 seconds for attack animation
+            self.attack_progress = min(1.0, phase_elapsed / attack_duration)
+            
+            # Check if attack is complete
+            if phase_elapsed >= attack_duration:
+                # Apply damage if player didn't defend
+                if not self.defense_active and not self.dodge_detected:
+                    damage = self.enemy.get_attack_damage()
+                    self.player_health = max(0, self.player_health - damage)
+                
+                # Reset for next phase
+                self.phase = constants.PHASE_STATES['PLAYER_ATTACK']
+                self.phase_start_time = current_time
+                self.active_hitboxes = self._generate_hitboxes()
+                self.hit_hitboxes = {}
+                self.combo_count = 0
+                self.enemy_damage_applied = False
+        
+        # Reset dodge detection
+        self.dodge_detected = False
     
     def _generate_hitboxes(self):
         """Generate random hitboxes for player attack phase"""
@@ -57,8 +133,8 @@ class RoundManager:
         self.hit_hitboxes = []
         self.phase = constants.PHASE_STATES['PLAYER_ATTACK']
     
-    def update(self, current_time, player, enemy):
-        """Update round state"""
+    def update(self, current_time, player, enemy, game_state):
+        """Update round state - FIXED TO ACCEPT game_state PARAMETER"""
         if self.is_rest_period:
             # Check if rest period ended
             if current_time - self.rest_start_time >= self.config.REST_DURATION:
@@ -83,10 +159,10 @@ class RoundManager:
             player_attack_time = self.config.get_difficulty_settings()["player_attack_time"]
             if phase_elapsed >= player_attack_time:
                 # Calculate combo damage
-                combo_count = len(self.hit_hitboxes)
+                combo_count = len(game_state.hit_hitboxes)
                 if combo_count > 0:
                     damage = self._calculate_combo_damage(combo_count)
-                    enemy.take_damage(damage)
+                    enemy.health = max(0, enemy.health - damage)
                 
                 # Transition to enemy attack warning
                 self.phase = constants.PHASE_STATES['ENEMY_ATTACK_WARNING']
@@ -102,9 +178,9 @@ class RoundManager:
                 self.attack_progress = 0
                 
                 # Set glove starting position
-                if self.enemy_target:
+                if game_state.enemy_target:
                     self.glove_position = (
-                        self.enemy_target[0],
+                        game_state.enemy_target[0],
                         self.config.CAMERA_HEIGHT + 50  # Start below screen
                     )
         
@@ -116,8 +192,9 @@ class RoundManager:
             # Check if attack is complete
             if phase_elapsed >= attack_duration:
                 # Apply damage if player didn't defend
-                damage = enemy.get_attack_damage()
-                # Damage will be applied in main game loop based on player's defense state
+                if not game_state.defense_active and not game_state.dodge_detected:
+                    damage = enemy.get_attack_damage()
+                    player.health = max(0, player.health - damage)
                 
                 # Reset for next phase
                 self.phase = constants.PHASE_STATES['PLAYER_ATTACK']

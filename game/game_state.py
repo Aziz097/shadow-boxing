@@ -1,6 +1,8 @@
 import time
-from core import constants, config
 import random
+from core import constants, config
+from game.hit_box_system import HitBoxSystem
+from entities.enemy.enemy_attack_system import EnemyAttackSystem
 
 class GameState:
     def __init__(self, game_config):
@@ -15,15 +17,23 @@ class GameState:
         self.combo_count = 0
         self.score = 0
         self.face_bbox = None
-        self.enemy_target = None
-        self.glove_position = None
-        self.attack_progress = 0
         self.defense_active = False
         self.dodge_detected = False
-        self.active_hitboxes = []
-        self.hit_hitboxes = []
         self.vfx_effects = []
+        self.vfx_hits = []  # For hit VFX
         self.sounds_to_play = []
+        self.round_start_time = time.time()
+        self.phase_start_time = time.time()
+        self.rest_start_time = 0
+        self.splash_played = False
+        
+        # Initialize systems
+        self.hitbox_system = HitBoxSystem(game_config)
+        self.enemy_attack_system = EnemyAttackSystem(game_config)
+        
+        # Phase duration (3 seconds for player attack)
+        self.player_attack_duration = 3.0
+        self.enemy_damage_applied = False
         
     def start_game(self):
         """Start the game from menu"""
@@ -33,15 +43,24 @@ class GameState:
         self.enemy_health = constants.ENEMY_MAX_HEALTH
         self.score = 0
         self.combo_count = 0
+        self.splash_played = False
         
     def start_round(self, round_num):
-        """Start a specific round"""
+        """Start a specific round with hitbox generation"""
         self.current_state = constants.GAME_STATES['PLAYING']
         self.current_round = round_num
         self.phase = constants.PHASE_STATES['PLAYER_ATTACK']
         self.combo_count = 0
-        self.active_hitboxes = self._generate_hitboxes()
-        self.hit_hitboxes = []
+        self.splash_played = True
+        self.round_start_time = time.time()
+        self.phase_start_time = time.time()
+        
+        # Generate hitboxes for player attack
+        self.hitbox_system.generate_hitboxes()
+        
+        # Reset enemy attack system
+        self.enemy_attack_system.reset()
+        self.enemy_damage_applied = False
         
     def _generate_hitboxes(self):
         """Generate random hitboxes for player attack phase"""
@@ -61,6 +80,7 @@ class GameState:
         """Start rest period between rounds"""
         self.current_state = constants.GAME_STATES['REST']
         self.rest_timer = self.config.REST_DURATION
+        self.rest_start_time = time.time()
     
     def game_over(self, player_won):
         """End the game"""
@@ -77,7 +97,7 @@ class GameState:
             self._update_round_splash(current_time)
     
     def _update_playing_state(self, current_time):
-        """Update during active gameplay"""
+        """Update during active gameplay with phase transitions"""
         # Update timers
         self.round_timer = max(0, self.config.ROUND_DURATION - (current_time - self.round_start_time))
         
@@ -88,62 +108,60 @@ class GameState:
                 self.rest_timer = self.config.REST_DURATION
                 self.rest_start_time = current_time
             else:
-                # Game over
                 player_won = self.player_health > self.enemy_health
                 self.game_over(player_won)
+            return
         
-        # Update phase timer and transitions
+        # Phase transitions
         phase_elapsed = current_time - self.phase_start_time
-        difficulty = self.config.get_difficulty_settings()
         
         if self.phase == constants.PHASE_STATES['PLAYER_ATTACK']:
-            # Player has limited time to hit targets
-            if phase_elapsed >= difficulty["player_attack_time"]:
-                # Calculate damage from hit hitboxes
-                damage = self._calculate_combo_damage(len(self.hit_hitboxes))
-                self.enemy_health = max(0, self.enemy_health - damage)
-                self.score += damage
+            # Player attack phase - 3 seconds
+            if phase_elapsed >= self.player_attack_duration:
+                # Calculate total damage from hit hitboxes
+                hit_count = self.hitbox_system.get_hit_count()
+                if hit_count > 0:
+                    print(f"Player hit {hit_count} targets!")
                 
                 # Transition to enemy attack warning
                 self.phase = constants.PHASE_STATES['ENEMY_ATTACK_WARNING']
                 self.phase_start_time = current_time
-                self.enemy_target = self._select_enemy_target()
+                self.combo_count = 0  # Reset combo for next phase
+                
+                # Start enemy attack
+                self.enemy_attack_system.start_attack(self.face_bbox, current_time)
         
         elif self.phase == constants.PHASE_STATES['ENEMY_ATTACK_WARNING']:
-            # Show target for enemy attack
-            if phase_elapsed >= difficulty["enemy_attack_warning"]:
-                # Transition to actual enemy attack
+            # Warning phase - target icon visible
+            # Update enemy attack system to check for warning -> attack transition
+            attack_result = self.enemy_attack_system.update(current_time, self.defense_active)
+            
+            if not self.enemy_attack_system.is_warning:
+                # Transitioned to attack phase
                 self.phase = constants.PHASE_STATES['ENEMY_ATTACK']
-                self.phase_start_time = current_time
-                self.attack_progress = 0
-                
-                # Set glove starting position below screen
-                if self.enemy_target:
-                    self.glove_position = (
-                        self.enemy_target[0],
-                        self.config.CAMERA_HEIGHT + 50
-                    )
+                print(f"[DEBUG] Transitioning to ENEMY_ATTACK phase, glove should appear now!")
         
         elif self.phase == constants.PHASE_STATES['ENEMY_ATTACK']:
-            # Move glove toward target
-            attack_duration = 0.5  # 0.5 seconds for attack animation
-            self.attack_progress = min(1.0, phase_elapsed / attack_duration)
+            # Update enemy attack system
+            attack_result = self.enemy_attack_system.update(current_time, self.defense_active)
             
-            # Check if attack is complete
-            if phase_elapsed >= attack_duration:
-                # Apply damage if player didn't defend or dodge
-                if not self.defense_active and not self.dodge_detected:
-                    damage = random.randint(constants.ENEMY_DAMAGE_MIN, constants.ENEMY_DAMAGE_MAX)
-                    difficulty = self.config.get_difficulty_settings()
-                    damage = int(damage * difficulty["enemy_damage_multiplier"])
-                    self.player_health = max(0, self.player_health - damage)
+            if attack_result:
+                # Attack completed - apply damage
+                damage = attack_result['damage']
+                self.player_health -= damage
                 
-                # Reset for next phase
+                if attack_result['was_defended']:
+                    print(f"Enemy attack DEFENDED! Damage reduced to {damage}")
+                else:
+                    print(f"Enemy attack HIT! Damage: {damage}")
+                
+                # Reset to player attack phase
                 self.phase = constants.PHASE_STATES['PLAYER_ATTACK']
                 self.phase_start_time = current_time
-                self.active_hitboxes = self._generate_hitboxes()
-                self.hit_hitboxes = []
+                self.hitbox_system.generate_hitboxes()  # New set of hitboxes
+                self.hit_hitboxes = {}
                 self.combo_count = 0
+                self.enemy_damage_applied = False
         
         # Reset dodge detection
         self.dodge_detected = False
@@ -158,6 +176,7 @@ class GameState:
             self.current_round += 1
             if self.current_round <= self.config.NUM_ROUNDS:
                 self.current_state = constants.GAME_STATES['ROUND_SPLASH']
+                self.splash_played = False
             else:
                 # Final round complete - game over
                 player_won = self.player_health > self.enemy_health
@@ -207,7 +226,7 @@ class GameState:
     def register_hit(self, hitbox):
         """Register a hit on a hitbox"""
         if hitbox not in self.hit_hitboxes:
-            self.hit_hitboxes.append(hitbox)
+            self.hit_hitboxes[hitbox] = time.time()  # Simpan waktu hit
             self.combo_count += 1
             return self.combo_count
         return 0
@@ -236,3 +255,7 @@ class GameState:
         sounds = self.sounds_to_play.copy()
         self.sounds_to_play.clear()
         return sounds
+    
+    def is_alive(self):
+        """Check if game is still active"""
+        return self.current_state not in [constants.GAME_STATES['GAME_OVER']]
