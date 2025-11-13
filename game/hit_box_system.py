@@ -14,8 +14,8 @@ class HitBoxSystem:
         self.hit_hitboxes = set()  # Track which hitboxes were hit
         self.hitbox_radius = 65  # Half of 130px for circle collision
         
-    def generate_hitboxes(self, count=None):
-        """Generate random non-overlapping hitboxes in screen area"""
+    def generate_hitboxes(self, count=None, face_bbox=None):
+        """Generate random non-overlapping hitboxes in screen area, avoiding face area"""
         if count is None:
             count = random.randint(self.config.MIN_HITBOXES, self.config.MAX_HITBOXES)
         
@@ -24,6 +24,19 @@ class HitBoxSystem:
         
         margin = self.config.HITBOX_MARGIN
         size = 130  # 130x130px untuk circle background + punch bag
+        
+        # Define face exclusion zone (larger than actual face for safety)
+        face_zone = None
+        if face_bbox:
+            face_x, face_y, face_w, face_h = face_bbox
+            # Expand face zone by 100px on all sides
+            face_zone = {
+                'x1': max(0, face_x - 100),
+                'y1': max(0, face_y - 100),
+                'x2': min(self.config.CAMERA_WIDTH, face_x + face_w + 100),
+                'y2': min(self.config.CAMERA_HEIGHT, face_y + face_h + 100)
+            }
+            print(f"[HITBOX] Face exclusion zone: {face_zone}")
         
         max_attempts = 100  # Prevent infinite loop
         attempts = 0
@@ -41,6 +54,15 @@ class HitBoxSystem:
                 center_x = x + size // 2
                 center_y = y + size // 2
                 
+                # Check if hitbox is in face exclusion zone
+                in_face_zone = False
+                if face_zone:
+                    # Check if hitbox center is in face zone
+                    if (face_zone['x1'] <= center_x <= face_zone['x2'] and 
+                        face_zone['y1'] <= center_y <= face_zone['y2']):
+                        in_face_zone = True
+                        continue  # Skip this position, try again
+                
                 # Check if overlaps with existing hitboxes
                 overlap = False
                 for existing in self.active_hitboxes:
@@ -55,7 +77,7 @@ class HitBoxSystem:
                         overlap = True
                         break
                 
-                if not overlap:
+                if not overlap and not in_face_zone:
                     hitbox = {
                         'id': i,
                         'x': x,
@@ -71,6 +93,7 @@ class HitBoxSystem:
                     }
                     self.active_hitboxes.append(hitbox)
                     placed = True
+                    print(f"[HITBOX] Placed hitbox {i} at ({center_x}, {center_y})")
     
     def check_hit(self, hand_x, hand_y, is_fist):
         """Check if fist punch hits any active hitbox (circle collision)"""

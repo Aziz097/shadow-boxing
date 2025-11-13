@@ -17,6 +17,7 @@ class GameState:
         self.combo_count = 0
         self.score = 0
         self.face_bbox = None
+        self.pose_landmarks = None  # Store pose landmarks for fallback
         self.defense_active = False
         self.dodge_detected = False
         self.vfx_effects = []
@@ -26,6 +27,12 @@ class GameState:
         self.phase_start_time = time.time()
         self.rest_start_time = 0
         self.splash_played = False
+        
+        # KO effect tracking
+        self.ko_effect_active = False
+        self.ko_start_time = 0
+        self.ko_duration = 2.5  # 2.5 seconds for KO animation
+        self.result_shown = False  # Flag to prevent duplicate result screen calls
         
         # Initialize systems
         self.hitbox_system = HitBoxSystem(game_config)
@@ -44,6 +51,9 @@ class GameState:
         self.score = 0
         self.combo_count = 0
         self.splash_played = False
+        self.ko_effect_active = False
+        self.ko_sfx_played = False
+        self.result_shown = False  # Reset result flag
         
     def start_round(self, round_num):
         """Start a specific round with hitbox generation"""
@@ -55,8 +65,8 @@ class GameState:
         self.round_start_time = time.time()
         self.phase_start_time = time.time()
         
-        # Generate hitboxes for player attack
-        self.hitbox_system.generate_hitboxes()
+        # Generate hitboxes for player attack (pass face_bbox to avoid face area)
+        self.hitbox_system.generate_hitboxes(face_bbox=self.face_bbox)
         
         # Reset enemy attack system
         self.enemy_attack_system.reset()
@@ -98,6 +108,30 @@ class GameState:
     
     def _update_playing_state(self, current_time):
         """Update during active gameplay with phase transitions"""
+        # Check if either player is KO'd (trigger KO effect)
+        if self.player_health <= 0 and not self.ko_effect_active:
+            print(f"[KO] Player knocked out! Starting KO effect...")
+            self.ko_effect_active = True
+            self.ko_start_time = current_time
+            self.ko_sfx_played = False  # Reset for SFX
+            self.player_won = False
+            return
+        
+        if self.enemy_health <= 0 and not self.ko_effect_active:
+            print(f"[KO] Enemy knocked out! Starting KO effect...")
+            self.ko_effect_active = True
+            self.ko_start_time = current_time
+            self.ko_sfx_played = False  # Reset for SFX
+            self.player_won = True
+            return
+        
+        # Check if KO effect finished
+        if self.ko_effect_active:
+            if current_time - self.ko_start_time >= self.ko_duration:
+                print(f"[KO] Effect duration complete")
+                # Don't call game_over here - let main.py handle transition
+            return
+        
         # Update timers
         self.round_timer = max(0, self.config.ROUND_DURATION - (current_time - self.round_start_time))
         
@@ -128,13 +162,19 @@ class GameState:
                 self.phase_start_time = current_time
                 self.combo_count = 0  # Reset combo for next phase
                 
+                # Check if enemy still alive before starting attack
+                if self.enemy_health <= 0:
+                    print(f"[GAME OVER] Enemy health depleted!")
+                    self.game_over(True)  # Player won
+                    return
+                
                 # Start enemy attack
-                self.enemy_attack_system.start_attack(self.face_bbox, current_time)
+                self.enemy_attack_system.start_attack(self.face_bbox, current_time, self.pose_landmarks)
         
         elif self.phase == constants.PHASE_STATES['ENEMY_ATTACK_WARNING']:
             # Warning phase - target icon visible
             # Update enemy attack system to check for warning -> attack transition
-            attack_result = self.enemy_attack_system.update(current_time, self.defense_active)
+            attack_result = self.enemy_attack_system.update(current_time, self.defense_active, self.face_bbox)
             
             if not self.enemy_attack_system.is_warning:
                 # Transitioned to attack phase
@@ -143,25 +183,36 @@ class GameState:
         
         elif self.phase == constants.PHASE_STATES['ENEMY_ATTACK']:
             # Update enemy attack system
-            attack_result = self.enemy_attack_system.update(current_time, self.defense_active)
+            attack_result = self.enemy_attack_system.update(current_time, self.defense_active, self.face_bbox)
             
             if attack_result:
                 # Attack completed - apply damage
                 damage = attack_result['damage']
-                self.player_health -= damage
+                self.player_health = max(0, self.player_health - damage)  # Prevent negative health
                 
                 if attack_result['was_defended']:
                     print(f"Enemy attack DEFENDED! Damage reduced to {damage}")
                 else:
                     print(f"Enemy attack HIT! Damage: {damage}")
                 
-                # Reset to player attack phase
-                self.phase = constants.PHASE_STATES['PLAYER_ATTACK']
-                self.phase_start_time = current_time
-                self.hitbox_system.generate_hitboxes()  # New set of hitboxes
-                self.hit_hitboxes = {}
-                self.combo_count = 0
-                self.enemy_damage_applied = False
+                # Check if combo continues or ends
+                if attack_result.get('combo_continues', False):
+                    # Combo continues - stay in ENEMY_ATTACK phase
+                    print(f"[COMBO] Waiting for next attack...")
+                else:
+                    # Combo complete - check if player still alive
+                    if self.player_health <= 0:
+                        print(f"[GAME OVER] Player health depleted!")
+                        self.game_over(False)  # Player lost
+                        return
+                    
+                    # Reset to player attack phase
+                    self.phase = constants.PHASE_STATES['PLAYER_ATTACK']
+                    self.phase_start_time = current_time
+                    self.hitbox_system.generate_hitboxes(face_bbox=self.face_bbox)  # Pass face_bbox
+                    self.hit_hitboxes = {}
+                    self.combo_count = 0
+                    self.enemy_damage_applied = False
         
         # Reset dodge detection
         self.dodge_detected = False

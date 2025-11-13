@@ -92,6 +92,12 @@ def main():
         
         # Handle game state transitions
         if game_state.current_state == constants.GAME_STATES['MENU']:
+            # Store vision data for helm rendering in menu
+            game_state.face_bbox = vision_system.get_face_bbox(vision_data['face'])
+            game_state.face_results = vision_data['face']
+            game_state.pose_results = vision_data['pose']
+            game_state.hand_results = vision_data['hands']
+            
             # Let menu system handle input
             menu_command = menu_system.handle_input(keys)
             if menu_command == "START":
@@ -135,6 +141,7 @@ def main():
             
             # Get face bbox for defense and store results for helm rendering
             game_state.face_bbox = vision_system.get_face_bbox(vision_data['face'])
+            game_state.pose_landmarks = vision_system.get_body_landmarks(vision_data['pose'])  # For fallback targeting
             game_state.face_results = vision_data['face']
             game_state.pose_results = vision_data['pose']
             game_state.hand_results = vision_data['hands']  # For hand skeleton rendering
@@ -142,22 +149,54 @@ def main():
             # Update game state (phase transitions, timers, etc)
             game_state.update(current_time, vision_system)
             
+            # Check if KO effect just started (play SFX once)
+            if game_state.ko_effect_active:
+                if not hasattr(game_state, 'ko_sfx_played') or not game_state.ko_sfx_played:
+                    try:
+                        audio_system.play_sound("ko", 1.0)
+                        print("[AUDIO] Playing KO sound effect")
+                        game_state.ko_sfx_played = True
+                    except Exception as e:
+                        print(f"Error playing KO sound: {str(e)}")
+                
+                # Check if KO effect finished and should transition to GAME_OVER
+                if current_time - game_state.ko_start_time >= game_state.ko_duration:
+                    if not game_state.result_shown:
+                        print("[KO] Effect complete, transitioning to GAME_OVER")
+                        game_state.current_state = constants.GAME_STATES['GAME_OVER']
+                        result_screen.show(game_state.player_won, game_state.score)
+                        game_state.result_shown = True
+                        try:
+                            audio_system.stop_music()
+                            audio_system.play_music("ko", 0.5)
+                            print("[AUDIO] Playing KO music")
+                        except Exception as e:
+                            print(f"Error playing KO music: {str(e)}")
+                # Skip rest of PLAYING logic during KO effect
+                continue
+            
             # Update player and enemy
             player.health = game_state.player_health
             enemy.health = game_state.enemy_health
             player.score = game_state.score
             
-            # Check for round end
-            if game_state.round_timer <= 0 and game_state.current_round >= game_config.NUM_ROUNDS:
-                game_state.current_state = constants.GAME_STATES['GAME_OVER']
-                player_won = player.health > enemy.health
-                result_screen.show(player_won, player.score)
-                try:
-                    audio_system.play_sound("ko" if not player_won else "strong_punch")
-                except Exception as e:
-                    print(f"Error playing game over sound: {str(e)}")
+            # Check for round end (only if not already in KO effect)
+            if not game_state.ko_effect_active:
+                if game_state.round_timer <= 0 and game_state.current_round >= game_config.NUM_ROUNDS:
+                    # Trigger KO effect
+                    game_state.ko_effect_active = True
+                    game_state.ko_start_time = current_time
+                    game_state.ko_sfx_played = False  # Reset flag for SFX
+                    game_state.player_won = player.health > enemy.health
+                    print("[ROUND END] Triggering KO effect before result screen")
         
         elif game_state.current_state == constants.GAME_STATES['REST']:
+            # Store vision data for helm rendering during rest
+            game_state.face_bbox = vision_system.get_face_bbox(vision_data['face'])
+            game_state.face_results = vision_data['face']
+            game_state.pose_results = vision_data['pose']
+            game_state.hand_results = vision_data['hands']
+            
             if current_time - game_state.rest_start_time >= game_config.REST_DURATION:
                 game_state.current_round += 1
                 if game_state.current_round <= game_config.NUM_ROUNDS:
@@ -165,9 +204,13 @@ def main():
                     fight_overlay.show_round_start(game_state.current_round)
                     game_state.round_sound_played = False
                 else:
-                    game_state.current_state = constants.GAME_STATES['GAME_OVER']
-                    player_won = player.health > enemy.health
-                    result_screen.show(player_won, player.score)
+                    # All rounds complete - trigger KO effect
+                    game_state.current_state = constants.GAME_STATES['PLAYING']  # Switch to PLAYING to show KO
+                    game_state.ko_effect_active = True
+                    game_state.ko_start_time = current_time
+                    game_state.ko_sfx_played = False
+                    game_state.player_won = player.health > enemy.health
+                    print("[ALL ROUNDS END] Triggering KO effect before result screen")
         
         elif game_state.current_state == constants.GAME_STATES['GAME_OVER']:
             if command == "SPACE" or keys[pygame.K_RETURN]:

@@ -13,8 +13,8 @@ class InputProcessor:
         self.last_punch_time = 0
         self.defense_active = False
         self.hand_states = {
-            'Left': {'is_fist': False, 'position': None, 'landmark_9': None},
-            'Right': {'is_fist': False, 'position': None, 'landmark_9': None}
+            'Left': {'is_fist': False, 'position': None, 'landmark_9': None, 'fingertips': []},
+            'Right': {'is_fist': False, 'position': None, 'landmark_9': None, 'fingertips': []}
         }
     
     def process_input(self, vision_data, game_state):
@@ -24,8 +24,8 @@ class InputProcessor:
         # Reset per-frame states
         self.defense_active = False
         self.hand_states = {
-            'Left': {'is_fist': False, 'position': None, 'landmark_9': None},
-            'Right': {'is_fist': False, 'position': None, 'landmark_9': None}
+            'Left': {'is_fist': False, 'position': None, 'landmark_9': None, 'fingertips': []},
+            'Right': {'is_fist': False, 'position': None, 'landmark_9': None, 'fingertips': []}
         }
         
         # Process hand landmarks
@@ -47,6 +47,15 @@ class InputProcessor:
                     int(landmarks[9].y * self.config.CAMERA_HEIGHT)
                 )
                 
+                # Get fingertip positions (8=index, 12=middle, 16=ring, 20=pinky)
+                fingertips = []
+                for tip_id in [8, 12, 16, 20]:
+                    tip_pos = (
+                        int(landmarks[tip_id].x * self.config.CAMERA_WIDTH),
+                        int(landmarks[tip_id].y * self.config.CAMERA_HEIGHT)
+                    )
+                    fingertips.append(tip_pos)
+                
                 # Check if fist
                 is_fist = self._is_fist(landmarks)
                 
@@ -54,7 +63,8 @@ class InputProcessor:
                 self.hand_states[hand_label] = {
                     'is_fist': is_fist,
                     'position': hand_pos,
-                    'landmark_9': landmark_9_pos
+                    'landmark_9': landmark_9_pos,
+                    'fingertips': fingertips
                 }
                 
                 # Process based on game phase
@@ -66,10 +76,12 @@ class InputProcessor:
                         )
                         
                         if hit_result:
-                            # Apply damage to enemy
-                            game_state.enemy_health -= hit_result['damage']
+                            # Apply damage to enemy (prevent negative health)
+                            game_state.enemy_health = max(0, game_state.enemy_health - hit_result['damage'])
                             game_state.combo_count = hit_result['combo']
                             game_state.score += hit_result['damage'] * hit_result['combo']
+                            
+                            print(f"[HIT] Combo {hit_result['combo']}x - Damage: {hit_result['damage']} - Enemy Health: {game_state.enemy_health}")
                             
                             # Trigger VFX
                             if not hasattr(game_state, 'vfx_hits'):
@@ -129,27 +141,63 @@ class InputProcessor:
                 avg_dist < self.config.FIST_DISTANCE_THRESHOLD)
     
     def _check_defense(self, game_state):
-        """Check if both hands' landmark 9 are in face bbox"""
-        if game_state.face_bbox is None:
+        """Check if fingertips from either hand are near eye area (pose landmarks 1-6)"""
+        # Reset defense status
+        self.defense_active = False
+        
+        # Need pose landmarks for eye position detection
+        if not hasattr(game_state, 'pose_landmarks') or game_state.pose_landmarks is None:
             return
         
-        # Get landmark 9 positions from both hands
-        left_lm9 = self.hand_states['Left']['landmark_9']
-        right_lm9 = self.hand_states['Right']['landmark_9']
+        # Get eye area pose landmarks (1=left_eye_inner, 2=left_eye, 3=left_eye_outer, 4=right_eye_inner, 5=right_eye, 6=right_eye_outer)
+        eye_landmarks_idx = [1, 2, 3, 4, 5, 6]
+        eye_positions = []
         
-        if left_lm9 is None or right_lm9 is None:
+        for idx in eye_landmarks_idx:
+            if idx < len(game_state.pose_landmarks):
+                landmark = game_state.pose_landmarks[idx]
+                eye_x = int(landmark.x * self.config.CAMERA_WIDTH)
+                eye_y = int(landmark.y * self.config.CAMERA_HEIGHT)
+                eye_positions.append((eye_x, eye_y))
+        
+        if not eye_positions:
             return
         
-        face_x, face_y, face_w, face_h = game_state.face_bbox
+        # Calculate average eye position
+        avg_eye_x = sum(pos[0] for pos in eye_positions) // len(eye_positions)
+        avg_eye_y = sum(pos[1] for pos in eye_positions) // len(eye_positions)
         
-        # Check if both landmark 9 are inside face bbox
-        left_in_face = (face_x <= left_lm9[0] <= face_x + face_w and 
-                       face_y <= left_lm9[1] <= face_y + face_h)
+        # Defense threshold: fingertips within 150px of eye area
+        defense_distance_threshold = 150
         
-        right_in_face = (face_x <= right_lm9[0] <= face_x + face_w and 
-                        face_y <= right_lm9[1] <= face_y + face_h)
+        # Check if any fingertips from either hand are near eyes
+        left_fingertips = self.hand_states['Left']['fingertips']
+        right_fingertips = self.hand_states['Right']['fingertips']
         
-        if left_in_face and right_in_face:
+        hands_defending = 0
+        
+        # Check left hand fingertips
+        if left_fingertips:
+            for tip_pos in left_fingertips:
+                dx = tip_pos[0] - avg_eye_x
+                dy = tip_pos[1] - avg_eye_y
+                distance = (dx**2 + dy**2)**0.5
+                if distance < defense_distance_threshold:
+                    hands_defending += 1
+                    break
+        
+        # Check right hand fingertips
+        if right_fingertips:
+            for tip_pos in right_fingertips:
+                dx = tip_pos[0] - avg_eye_x
+                dy = tip_pos[1] - avg_eye_y
+                distance = (dx**2 + dy**2)**0.5
+                if distance < defense_distance_threshold:
+                    hands_defending += 1
+                    break
+        
+        # Defense active if at least one hand covering eyes
+        if hands_defending >= 1:
             self.defense_active = True
     
     def get_defense_status(self):

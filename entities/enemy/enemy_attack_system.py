@@ -20,9 +20,16 @@ class EnemyAttackSystem:
         self.attack_damage = 0
         self.warning_duration = 1.0  # Will be set based on difficulty
         
-    def start_attack(self, face_bbox, current_time):
-        """Start enemy attack sequence with random target on player face"""
-        if face_bbox is None:
+        # Combo attack properties
+        self.combo_count = 0  # Current attack in combo
+        self.combo_max = 0  # Total attacks in this combo (3-4)
+        self.combo_delay = 0.4  # Delay between attacks in combo (400ms)
+        self.combo_end_time = 0  # When to start next attack in combo
+        self.was_defended_during_attack = False  # Track if player defended during attack animation
+        
+    def start_attack(self, face_bbox, current_time, pose_landmarks=None):
+        """Start enemy attack sequence with random target on player face or head (pose fallback)"""
+        if face_bbox is None and pose_landmarks is None:
             return False
         
         face_x, face_y, face_w, face_h = face_bbox
@@ -42,6 +49,11 @@ class EnemyAttackSystem:
         self.glove_position = None
         self.glove_progress = 0
         
+        # Initialize combo attack (3-4 attacks)
+        self.combo_count = 0
+        self.combo_max = random.randint(3, 4)
+        print(f"[ENEMY COMBO] Starting combo with {self.combo_max} attacks")
+        
         # Set warning duration based on difficulty
         difficulty = self.config.get_difficulty_settings()
         difficulty_name = self.config.DEFAULT_DIFFICULTY
@@ -59,7 +71,7 @@ class EnemyAttackSystem:
         
         return True
     
-    def update(self, current_time, is_defending):
+    def update(self, current_time, is_defending, face_bbox=None):
         """Update attack state with glove animation from bottom to target"""
         attack_duration = 0.5  # 500ms for glove animation
         
@@ -69,12 +81,18 @@ class EnemyAttackSystem:
                 self.is_warning = False
                 self.is_attacking = True
                 self.attack_start_time = current_time
+                self.combo_count = 1  # Start first attack in combo
+                self.was_defended_during_attack = False  # Reset defense tracking for new attack
                 # Glove starts from bottom center of screen
                 self.glove_position = [self.config.CAMERA_WIDTH // 2, self.config.CAMERA_HEIGHT]
-                print(f"[ENEMY ATTACK] Starting glove animation from bottom ({self.glove_position}) to target ({self.target_position})")
+                print(f"[ENEMY COMBO] Attack {self.combo_count}/{self.combo_max} - Glove from bottom to target")
         
         # Attack animation - linear interpolation from bottom to target
         if self.is_attacking:
+            # Track if player is defending during attack animation
+            if is_defending:
+                self.was_defended_during_attack = True
+            
             elapsed = current_time - self.attack_start_time
             self.glove_progress = min(1.0, elapsed / attack_duration)
             
@@ -92,16 +110,92 @@ class EnemyAttackSystem:
             if elapsed >= attack_duration:
                 self.is_attacking = False
                 
-                # Calculate final damage (reduced if defending)
-                final_damage = self.attack_damage
-                if is_defending:
-                    final_damage = int(final_damage * 0.2)  # 80% damage reduction
+                # Check if player dodged - both target AND glove must be in CURRENT face bbox
+                player_dodged = False
+                if self.target_position and self.glove_position:
+                    target_x, target_y = self.target_position
+                    glove_x, glove_y = self.glove_position
+                    
+                    # Check if face_bbox exists at hit moment
+                    if face_bbox:
+                        face_x, face_y, face_w, face_h = face_bbox
+                        
+                        # Check if target is still in current face area
+                        target_in_face = (face_x <= target_x <= face_x + face_w and 
+                                         face_y <= target_y <= face_y + face_h)
+                        
+                        # Check if glove is in current face area
+                        glove_in_face = (face_x <= glove_x <= face_x + face_w and 
+                                        face_y <= glove_y <= face_y + face_h)
+                        
+                        # Player dodged if either target or glove is outside current face
+                        if not target_in_face or not glove_in_face:
+                            player_dodged = True
+                            print(f"[DODGE SUCCESS] Attack {self.combo_count}/{self.combo_max} DODGED! Target in face: {target_in_face}, Glove in face: {glove_in_face}")
+                    else:
+                        # No face detected at hit moment = auto dodge
+                        player_dodged = True
+                        print(f"[DODGE SUCCESS] Attack {self.combo_count}/{self.combo_max} DODGED! Face not detected")
                 
-                return {
-                    'damage': final_damage,
-                    'position': self.target_position,
-                    'was_defended': is_defending
-                }
+                # Calculate final damage
+                if player_dodged:
+                    final_damage = 0  # Complete dodge
+                elif self.was_defended_during_attack:
+                    final_damage = int(self.attack_damage * 0.2)  # 80% damage reduction
+                    print(f"[DEFENSE SUCCESS] Attack {self.combo_count}/{self.combo_max} BLOCKED! Damage: {self.attack_damage} -> {final_damage}")
+                else:
+                    final_damage = self.attack_damage
+                    print(f"[HIT] Attack {self.combo_count}/{self.combo_max} landed! Damage: {final_damage}")
+                
+                # Check if combo continues
+                if self.combo_count < self.combo_max:
+                    # Start next attack in combo after delay
+                    self.combo_end_time = current_time + self.combo_delay
+                    self.combo_count += 1
+                    
+                    # Generate new target for next attack
+                    # Priority: face_bbox > pose landmarks fallback
+                    if face_bbox:
+                        face_x, face_y, face_w, face_h = face_bbox
+                        margin_x = int(face_w * 0.2)
+                        margin_y = int(face_h * 0.2)
+                        target_x = face_x + margin_x + random.randint(0, face_w - 2*margin_x)
+                        target_y = face_y + margin_y + random.randint(0, face_h - 2*margin_y)
+                        self.target_position = (target_x, target_y)
+                        print(f"[ENEMY COMBO] Target set using face_bbox")
+                    else:
+                        # Fallback: keep previous target position (player likely moved)
+                        print(f"[ENEMY COMBO] Warning: face not detected, keeping previous target")
+                    
+                    # Return damage but don't end combo
+                    return {
+                        'damage': final_damage,
+                        'position': self.target_position,
+                        'was_defended': self.was_defended_during_attack,
+                        'was_dodged': player_dodged,
+                        'combo_continues': True
+                    }
+                else:
+                    # Final attack in combo - end sequence
+                    print(f"[ENEMY COMBO] Combo complete! Total attacks: {self.combo_max}")
+                    return {
+                        'damage': final_damage,
+                        'position': self.target_position,
+                        'was_defended': self.was_defended_during_attack,
+                        'was_dodged': player_dodged,
+                        'combo_continues': False
+                    }
+        
+        # Check if it's time to start next attack in combo
+        if not self.is_attacking and not self.is_warning and self.combo_count > 0 and self.combo_count <= self.combo_max:
+            if current_time >= self.combo_end_time:
+                # Start next attack in combo
+                self.is_attacking = True
+                self.attack_start_time = current_time
+                self.glove_position = [self.config.CAMERA_WIDTH // 2, self.config.CAMERA_HEIGHT]
+                self.glove_progress = 0  # Reset progress for new attack
+                self.was_defended_during_attack = False  # Reset defense tracking for new attack
+                print(f"[ENEMY COMBO] Attack {self.combo_count}/{self.combo_max} - Glove from bottom to target")
         
         return None
     
@@ -129,3 +223,7 @@ class EnemyAttackSystem:
         self.glove_position = None
         self.glove_progress = 0
         self.attack_damage = 0
+        self.combo_count = 0
+        self.combo_max = 0
+        self.combo_end_time = 0
+        self.was_defended_during_attack = False

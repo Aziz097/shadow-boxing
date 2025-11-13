@@ -50,6 +50,13 @@ class RenderSystem:
         self.helm_image = self._load_asset("boxing-helm.png", (120, 120))
         self.glove_image = self._load_asset("boxing_glove.png", (80, 80))
         self.target_icon = self._load_asset("target-icon.png", (60, 60))
+        self.ko_sprite = self._load_asset("ko.png", (500, 300))  # KO sprite for knockout effect
+        
+        # Log KO sprite status
+        if self.ko_sprite is not None:
+            print(f"[ASSETS] KO sprite loaded successfully - Shape: {self.ko_sprite.shape}")
+        else:
+            print(f"[ASSETS] WARNING: KO sprite failed to load, will use text fallback")
         
         # Ensure we have at least placeholder images
         if self.punch_bag_red is None:
@@ -142,16 +149,29 @@ class RenderSystem:
         # Render game elements based on state
         if game_state.current_state == constants.GAME_STATES['PLAYING']:
             self._render_playing_state(game_state)
+            # Render KO effect if active
+            if hasattr(game_state, 'ko_effect_active') and game_state.ko_effect_active:
+                self._render_ko_effect(game_state)
         elif game_state.current_state == constants.GAME_STATES['ROUND_SPLASH']:
             # Handled by FightOverlay
             pass
         elif game_state.current_state == constants.GAME_STATES['REST']:
+            # Render helm BEFORE rest period overlay so text appears in front
+            if hasattr(game_state, 'face_results') or hasattr(game_state, 'pose_results'):
+                face_results = getattr(game_state, 'face_results', None)
+                pose_results = getattr(game_state, 'pose_results', None)
+                self._render_player_helm(game_state.face_bbox, face_results, pose_results)
             self._render_rest_period(game_state)
         elif game_state.current_state == constants.GAME_STATES['GAME_OVER']:
-            self._render_game_over(game_state)
-        elif game_state.current_state == constants.GAME_STATES['MENU']:
-            # Handled by MenuSystem
+            # GAME_OVER rendering handled by result_screen in main.py
+            # No rendering here to avoid double rendering
             pass
+        elif game_state.current_state == constants.GAME_STATES['MENU']:
+            # Render helm in menu as well
+            if hasattr(game_state, 'face_bbox') and hasattr(game_state, 'face_results'):
+                face_results = getattr(game_state, 'face_results', None)
+                pose_results = getattr(game_state, 'pose_results', None)
+                self._render_player_helm(game_state.face_bbox, face_results, pose_results)
         
         # DO NOT call pygame.display.flip() here - done in main loop
         # HUD rendering is handled by HUDRenderer in main.py
@@ -257,13 +277,13 @@ class RenderSystem:
             center_y = int((min_y + max_y) / 2)
             
             # Scale helm to proper size (1.2x for comfortable boxing helm coverage)
-            helm_width = max(100, int(face_width * 1.2))
-            helm_height = max(100, int(face_height * 1.2))
+            helm_width = max(100, int(face_width * 1.3))
+            helm_height = max(100, int(face_height * 1.3))
             helm_size = (helm_width, helm_height)
             
-            # Position helm centered on face center
+            # Position helm centered on face center, moved up by 40px
             helm_x = center_x - helm_width // 2
-            helm_y = center_y - helm_height // 2
+            helm_y = center_y - helm_height // 2 - 40  # Tarik ke atas 40px
         
         # Fallback to body pose landmarks if face mesh not detected
         elif pose_results and pose_results.pose_landmarks:
@@ -463,6 +483,102 @@ class RenderSystem:
         self.screen.blit(rest_text, rest_text.get_rect(center=(self.config.WINDOW_WIDTH//2, self.config.WINDOW_HEIGHT//2 - 30)))
         self.screen.blit(timer_text, timer_text.get_rect(center=(self.config.WINDOW_WIDTH//2, self.config.WINDOW_HEIGHT//2 + 30)))
     
+    def _render_ko_effect(self, game_state):
+        """Render KO effect with ko.png sprite animation"""
+        import time
+        
+        # Calculate animation progress (0.0 to 1.0)
+        elapsed = time.time() - game_state.ko_start_time
+        progress = min(1.0, elapsed / game_state.ko_duration)
+        
+        # Semi-transparent red overlay for dramatic effect
+        overlay = pygame.Surface((self.config.WINDOW_WIDTH, self.config.WINDOW_HEIGHT), pygame.SRCALPHA)
+        alpha = int(150 * progress)  # Lighter fade to 150 alpha
+        overlay.fill((100, 0, 0, alpha))  # Red tint instead of black
+        self.screen.blit(overlay, (0, 0))
+        
+        # Use ko.png sprite if available, otherwise fallback to text
+        if self.ko_sprite is not None:
+            # Pulsing scale effect for KO sprite
+            pulse_scale = 1.0 + 0.3 * abs(math.sin(elapsed * 4))  # Pulse between 1.0 and 1.3 (more dramatic)
+            
+            # Calculate size with pulse - LARGER base size for better visibility
+            base_width = 600
+            base_height = 360
+            sprite_width = int(base_width * pulse_scale)
+            sprite_height = int(base_height * pulse_scale)
+            
+            # Resize sprite with current scale
+            try:
+                ko_surface = cv2.resize(self.ko_sprite, (sprite_width, sprite_height))
+                ko_rgba = cv2.cvtColor(ko_surface, cv2.COLOR_BGRA2RGBA)
+                ko_pygame = pygame.image.frombuffer(ko_rgba.tobytes(), (sprite_width, sprite_height), "RGBA")
+                
+                # Slight shake effect in first 0.5 seconds
+                shake_x = int(15 * math.sin(elapsed * 20)) if progress < 0.2 else 0
+                shake_y = int(15 * math.cos(elapsed * 20)) if progress < 0.2 else 0
+                
+                # Center position with shake
+                sprite_x = (self.config.WINDOW_WIDTH - sprite_width) // 2 + shake_x
+                sprite_y = (self.config.WINDOW_HEIGHT - sprite_height) // 2 + shake_y
+                
+                # Apply fade in alpha to sprite - FULL opacity for visibility
+                sprite_alpha = 255  # Always full opacity
+                ko_pygame.set_alpha(sprite_alpha)
+                
+                # Add white flash effect in first 0.3 seconds for impact
+                if progress < 0.3:
+                    flash_alpha = int(200 * (1.0 - progress / 0.3))  # Fade from 200 to 0
+                    flash_overlay = pygame.Surface((self.config.WINDOW_WIDTH, self.config.WINDOW_HEIGHT), pygame.SRCALPHA)
+                    flash_overlay.fill((255, 255, 255, flash_alpha))
+                    self.screen.blit(flash_overlay, (0, 0))
+                
+                self.screen.blit(ko_pygame, (sprite_x, sprite_y))
+            except Exception as e:
+                print(f"[KO EFFECT] Error rendering sprite: {e}")
+                # Fallback to text if sprite fails
+                self._render_ko_text_fallback(elapsed, progress)
+        else:
+            # Fallback to text rendering
+            self._render_ko_text_fallback(elapsed, progress)
+    
+    def _render_ko_text_fallback(self, elapsed, progress):
+        """Fallback text rendering for KO effect"""
+        # KO text with pulsing scale effect
+        pulse_scale = 1.0 + 0.3 * abs(math.sin(elapsed * 3))  # Pulse between 1.0 and 1.3
+        ko_size = int(200 * pulse_scale)
+        
+        try:
+            ko_font = pygame.font.Font(self.font_path, ko_size)
+        except:
+            ko_font = pygame.font.SysFont("Arial", ko_size, bold=True)
+        
+        # Gradient effect: red to orange
+        color_phase = (elapsed * 2) % 1.0
+        red = 255
+        green = int(100 + 155 * color_phase)
+        ko_color = (red, green, 0)
+        
+        ko_text = ko_font.render("K.O.", True, ko_color)
+        
+        # Slight shake effect
+        shake_x = int(10 * math.sin(elapsed * 15)) if progress < 0.5 else 0
+        shake_y = int(10 * math.cos(elapsed * 15)) if progress < 0.5 else 0
+        
+        ko_rect = ko_text.get_rect(center=(
+            self.config.WINDOW_WIDTH // 2 + shake_x,
+            self.config.WINDOW_HEIGHT // 2 + shake_y
+        ))
+        
+        # Shadow effect
+        shadow_offset = 5
+        shadow_text = ko_font.render("K.O.", True, (50, 0, 0))
+        shadow_rect = shadow_text.get_rect(center=(ko_rect.centerx + shadow_offset, ko_rect.centery + shadow_offset))
+        self.screen.blit(shadow_text, shadow_rect)
+        
+        # Main text
+        self.screen.blit(ko_text, ko_rect)
+    
     def _render_game_over(self, game_state):
         """Render game over screen"""
         overlay = pygame.Surface((self.config.WINDOW_WIDTH, self.config.WINDOW_HEIGHT), pygame.SRCALPHA)
@@ -587,13 +703,9 @@ class RenderSystem:
     def _render_enemy_attack(self, game_state):
         """Render enemy attack dengan target icon dan glove animation"""
         if not hasattr(game_state, 'enemy_attack_system'):
-            print("[RENDER DEBUG] No enemy_attack_system in game_state")
             return
         
         attack_system = game_state.enemy_attack_system
-        
-        # Debug: Check attack state
-        print(f"[RENDER DEBUG] is_active={attack_system.is_active()}, is_warning={attack_system.is_warning}, is_attacking={attack_system.is_attacking}")
         
         # Check if attack system is active (warning or attacking)
         if not attack_system.is_active():
@@ -602,7 +714,6 @@ class RenderSystem:
         # Render target icon during warning phase
         if attack_system.is_warning:
             target_pos = attack_system.get_target_position()
-            print(f"[RENDER DEBUG] WARNING - target_pos={target_pos}")
             if target_pos:
                 target_x, target_y = target_pos
                 screen_x = int(target_x * self.config.WINDOW_WIDTH / self.config.CAMERA_WIDTH)
@@ -621,8 +732,6 @@ class RenderSystem:
             glove_pos = attack_system.get_glove_position()
             target_pos = attack_system.get_target_position()
             
-            print(f"[RENDER DEBUG] ATTACKING - glove_pos={glove_pos}, target_pos={target_pos}, glove_image={self.glove_image is not None}")
-            
             if glove_pos and target_pos:
                 glove_x, glove_y = glove_pos
                 target_x, target_y = target_pos
@@ -633,11 +742,9 @@ class RenderSystem:
                 screen_target_x = int(target_x * self.config.WINDOW_WIDTH / self.config.CAMERA_WIDTH)
                 screen_target_y = int(target_y * self.config.WINDOW_HEIGHT / self.config.CAMERA_HEIGHT)
                 
-                print(f"[RENDER DEBUG] Screen coords - glove=({screen_glove_x}, {screen_glove_y}), target=({screen_target_x}, {screen_target_y})")
-                
                 if self.glove_image is not None:
                     try:
-                        glove_size = 80
+                        glove_size = 120
                         glove_resized = cv2.resize(self.glove_image, (glove_size, glove_size))
                         glove_rgba = cv2.cvtColor(glove_resized, cv2.COLOR_BGRA2RGBA)
                         glove_surface = pygame.image.frombuffer(glove_rgba.tobytes(), (glove_size, glove_size), "RGBA")
@@ -657,7 +764,6 @@ class RenderSystem:
                                 self.screen.blit(trail_surface, (trail_screen_x - glove_size // 2, trail_screen_y - glove_size // 2))
                         
                         self.screen.blit(glove_surface, (screen_glove_x - glove_size // 2, screen_glove_y - glove_size // 2))
-                        print(f"[RENDER DEBUG] Glove rendered successfully at ({screen_glove_x}, {screen_glove_y})")
                         
                         # Also draw target crosshair during attack
                         size = 30
@@ -667,11 +773,9 @@ class RenderSystem:
                         pygame.draw.line(self.screen, (255, 100, 100), 
                                        (screen_target_x, screen_target_y - size - 5), (screen_target_x, screen_target_y + size + 5), 2)
                     except Exception as e:
-                        print(f"[RENDER DEBUG] Error rendering glove: {e}")
                         # Fallback: draw red circle
                         pygame.draw.circle(self.screen, (200, 0, 0), (screen_glove_x, screen_glove_y), 30, 0)
                 else:
-                    print(f"[RENDER DEBUG] glove_image is None! Drawing fallback circle")
                     # Fallback: draw red circle
                     pygame.draw.circle(self.screen, (200, 0, 0), (screen_glove_x, screen_glove_y), 30, 0)
     
