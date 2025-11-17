@@ -28,7 +28,8 @@ Sistem menggunakan MediaPipe untuk mendeteksi elemen-elemen tubuh penting sepert
 | --- | --- | --- |
 | 10/28/2025 | Pembuatan Repositori github Shadow Boxing, dan pembagian pekerjaan | Repositori github tugas besar dan koordinasi tim terkait pembagian scope pekerjaan |
 | 11/9/2025 | Pemilihan Assets Fix & Rework FLow Game/Filter | Fiksasi assets (sound, filter, font), flow ui game |
-| 11/10/2024 | Implementasi Core Game Systems, Game Mechanics, UI/UX, serta Difficulty System & Optimization | - **Core Systems:** System camera, MediaPipe detection, audio manager, visual effects <br/> - **Game Mechanics:** Punch detection, defense system, hitbox, combo system <br/> - **UI/UX:** Menu system, HUD, pause screen, transitions, game over screen <br/> - **Difficulty & Optimization:** 3 level kesulitan, text caching, fullscreen support |
+| 11/10/2025 | Implementasi Core Game Systems, Game Mechanics, UI/UX, serta Difficulty System & Optimization | - **Core Systems:** System camera, MediaPipe detection, audio manager, visual effects <br/> - **Game Mechanics:** Punch detection, defense system, hitbox, combo system <br/> - **UI/UX:** Menu system, HUD, pause screen, transitions, game over screen <br/> - **Difficulty & Optimization:** 3 level kesulitan, text caching, fullscreen support |
+| 11/17/2025 | Audio Processing, UI/UX Polish, dan Automation Script | - **Audio Processing:** Konversi MP3 ke WAV format MIREX (44100 Hz, mono, 16-bit PCM), analisis dan normalisasi LUFS ke -16 dB untuk konsistensi audio <br/> - **UI/UX Polish:** Penyesuaian ukuran font PressStart2P untuk proporsi lebih baik, perbaikan alignment highlight background pada menu items <br/> - **Automation:** Pembuatan launcher script (shadow_boxing.bat & shadow_boxing.sh) dengan auto-check dependencies dan instalasi otomatis |
 
 ---
 
@@ -39,7 +40,29 @@ Sistem menggunakan MediaPipe untuk mendeteksi elemen-elemen tubuh penting sepert
 - Webcam
 - Windows/Linux/Mac
 
-### Instalasi
+### Quick Start (Recommended)
+
+Gunakan script launcher yang sudah disediakan untuk memudahkan instalasi dan menjalankan game:
+
+**Windows:**
+```bash
+shadow_boxing.bat
+```
+
+**Linux/Mac:**
+```bash
+chmod +x shadow_boxing.sh
+./shadow_boxing.sh
+```
+
+Script akan otomatis:
+- Memeriksa instalasi Python
+- Mengecek dan menginstall dependencies yang diperlukan
+- Menjalankan game
+
+### Manual Installation
+
+Jika ingin instalasi manual:
 
 1. **Clone repository:**
 ```bash
@@ -47,7 +70,7 @@ git clone https://github.com/Aziz097/shadow-boxing.git
 cd shadow-boxing
 ```
 
-2. **Buat virtual environment:**
+2. **Buat virtual environment (opsional):**
 ```bash
 python -m venv shadow-boxing-venv
 ```
