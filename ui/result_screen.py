@@ -1,6 +1,5 @@
 import pygame
 import time
-from core import config
 
 class ResultScreen:
     def __init__(self, game_config):

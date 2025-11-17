@@ -5,11 +5,7 @@ import os
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 
 import pygame
-import cv2
 import time
-import random
-import math
-import numpy as np
 from core.config import Config
 from systems.vision_system import VisionSystem
 from systems.audio_system import AudioSystem
@@ -17,7 +13,6 @@ from systems.render_system import RenderSystem
 from systems.input_processor import InputProcessor
 from entities.player.player import Player
 from entities.enemy.enemy import Enemy
-from entities.enemy.enemy_attack_system import EnemyAttackSystem
 from game.game_state import GameState
 from ui.hud_renderer import HUDRenderer
 from ui.menu_system import MenuSystem

@@ -4,9 +4,7 @@ import pygame
 import os
 import time
 import math
-import random
-from core import config, utils, constants
-from core.math_utils import distance
+from core import constants
 import mediapipe as mp
 
 class RenderSystem:
@@ -580,7 +578,7 @@ class RenderSystem:
         
         title = self.font['large'].render(result_text, True, color)
         score = self.font['medium'].render(f"Final Score: {game_state.score}", True, (255, 255, 255))
-        restart = self.font['small'].render("Press SPACE to restart", True, (200, 200, 200))
+        restart = self.font['small'].render("Press Enter to restart", True, (200, 200, 200))
         
         self.screen.blit(title, title.get_rect(center=(self.config.WINDOW_WIDTH//2, self.config.WINDOW_HEIGHT//2 - 60)))
         self.screen.blit(score, score.get_rect(center=(self.config.WINDOW_WIDTH//2, self.config.WINDOW_HEIGHT//2 + 20)))

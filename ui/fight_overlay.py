@@ -2,7 +2,6 @@ import pygame
 import time
 import math
 import os
-from core import config
 
 class FightOverlay:
     def __init__(self, game_config):

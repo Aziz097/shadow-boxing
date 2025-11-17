@@ -4,7 +4,7 @@ Handles fist detection, hit box punching, and defense with landmark 9 (middle_fi
 """
 import time
 import numpy as np
-from core import config, constants
+from core import constants
 from core.math_utils import calculate_angle, distance
 
 class InputProcessor:

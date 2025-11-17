@@ -1,5 +1,5 @@
 import time
-from core import constants, config
+from core import constants
 
 class Player:
     def __init__(self, game_config):
