@@ -1,3 +1,5 @@
+"""Fight overlay - displays round splash screens and FIGHT text."""
+
 import pygame
 import time
 import math

@@ -1,7 +1,5 @@
-"""
-Input Processor - Clean Version
-Handles fist detection, hit box punching, and defense with landmark 9 (middle_finger_mcp)
-"""
+"""Input processor - detects fist punches, hitbox collision, and defense."""
+
 import time
 import numpy as np
 from core import constants

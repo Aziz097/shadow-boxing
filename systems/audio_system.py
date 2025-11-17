@@ -1,3 +1,5 @@
+"""Audio system - manages sound effects and background music."""
+
 import pygame
 import os
 
@@ -47,6 +49,7 @@ class AudioSystem:
         self.sounds[sound_name].play()
     
     def preload_music(self, music_name):
+        """Preload music for faster playback (currently unused)"""
         pass
     
     def play_music(self, music_name, volume=0.5, loops=-1):

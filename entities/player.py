@@ -1,3 +1,5 @@
+"""Player entity - manages player state, health, combo, and scoring."""
+
 import time
 from core import constants
 

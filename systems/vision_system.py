@@ -1,3 +1,5 @@
+"""Vision system - integrates MediaPipe for hand, pose, and face detection."""
+
 import cv2
 import mediapipe as mp
 import time

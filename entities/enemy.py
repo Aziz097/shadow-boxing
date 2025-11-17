@@ -1,6 +1,8 @@
+"""Enemy entity - manages enemy state, health, and attack timing."""
+
 import random
 import time
-from core import constants, config
+from core import constants
 
 class Enemy:
     def __init__(self, game_config):

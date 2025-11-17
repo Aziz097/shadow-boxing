@@ -1,3 +1,5 @@
+"""Shadow Boxing - Main game loop and initialization."""
+
 import warnings
 import os
 
@@ -11,8 +13,8 @@ from systems.vision_system import VisionSystem
 from systems.audio_system import AudioSystem
 from systems.render_system import RenderSystem
 from systems.input_processor import InputProcessor
-from entities.player.player import Player
-from entities.enemy.enemy import Enemy
+from entities.player import Player
+from entities.enemy import Enemy
 from game.game_state import GameState
 from ui.hud_renderer import HUDRenderer
 from ui.menu_system import MenuSystem

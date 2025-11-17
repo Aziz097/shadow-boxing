@@ -1,8 +1,9 @@
+"""Core utilities - font manager, image loading, and rendering helpers."""
+
 import cv2
 import numpy as np
 import os
 import pygame
-# from . import config
 
 class FontManager:
     """Singleton Font Manager to avoid duplicate font loading"""

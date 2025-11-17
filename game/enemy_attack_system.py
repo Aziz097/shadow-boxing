@@ -1,8 +1,5 @@
-"""
-Enemy Attack System
-Manages enemy attack with target icon and glove animation
-Warning times: Easy 1.2s, Medium 1.0s, Hard 0.8s
-"""
+﻿"""Enemy attack system - manages attack warnings, targeting, and combo attacks."""
+
 import time
 import random
 from core import constants

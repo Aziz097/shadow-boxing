@@ -1,7 +1,5 @@
-"""
-Game constants and thresholds
-Separate from config to avoid circular imports
-"""
+"""Game constants - states, damage values, and difficulty settings."""
+
 # Game states
 GAME_STATES = {
     'MENU': 'MENU',

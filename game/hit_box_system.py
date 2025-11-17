@@ -1,7 +1,5 @@
-"""
-Hit Box System for Player Attack Phase
-Manages hitbox generation with non-overlapping placement, hit detection, and damage calculation
-"""
+"""Hitbox system - generates and manages player attack targets."""
+
 import random
 import time
 import math

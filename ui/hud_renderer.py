@@ -1,8 +1,10 @@
-from core import constants
-from core.utils import FontManager
+"""HUD renderer - displays health bars, timer, combo counter, and phase info."""
+
 import pygame
 import time
 import math
+from core import constants
+from core.utils import FontManager
 
 class HUDRenderer:
     def __init__(self, game_config, render_system):

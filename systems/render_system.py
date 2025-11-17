@@ -1,11 +1,13 @@
+"""Render system - handles all game graphics, sprites, and visual effects."""
+
 import cv2
 import numpy as np
 import pygame
 import os
 import time
 import math
-from core import constants
 import mediapipe as mp
+from core import constants
 
 class RenderSystem:
     def __init__(self, game_config):

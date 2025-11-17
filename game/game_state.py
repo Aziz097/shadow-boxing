@@ -1,8 +1,10 @@
+"""Game state - manages game flow, phases, rounds, and player/enemy health."""
+
 import time
 import random
 from core import constants
 from game.hit_box_system import HitBoxSystem
-from entities.enemy.enemy_attack_system import EnemyAttackSystem
+from game.enemy_attack_system import EnemyAttackSystem
 
 class GameState:
     def __init__(self, game_config):

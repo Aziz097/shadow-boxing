@@ -1,3 +1,5 @@
+"""Math utilities - angle calculations, distance, and velocity helpers."""
+
 import numpy as np
 import math
 

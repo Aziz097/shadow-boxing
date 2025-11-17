@@ -1,3 +1,5 @@
+"""Menu system - handles main menu navigation and input."""
+
 import pygame
 import time
 import os

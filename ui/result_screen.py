@@ -1,3 +1,5 @@
+"""Result screen - displays game over screen with victory/defeat message."""
+
 import pygame
 import time
 

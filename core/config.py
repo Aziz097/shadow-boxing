@@ -1,7 +1,5 @@
-"""
-Centralized Configuration Manager
-All game settings loaded from config module provided by user
-"""
+"""Game configuration - centralizes all settings and paths."""
+
 import os
 from . import constants
 
