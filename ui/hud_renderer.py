@@ -40,7 +40,7 @@ class HUDRenderer:
         
         # Combo counter
         if game_state.combo_count > 0:
-            combo_font = self._get_font(24)
+            combo_font = self._get_font(16)
             combo_text = combo_font.render(f"COMBO x{game_state.combo_count}", True, (255, 215, 0))
             screen.blit(combo_text, (self.config.WINDOW_WIDTH//2 - combo_text.get_width()//2, 150))
         
@@ -50,7 +50,7 @@ class HUDRenderer:
             self._draw_phase_indicator(screen, phase_text)
         
         # Score
-        score_font = self._get_font(16)
+        score_font = self._get_font(12)
         score_text = score_font.render(f"SCORE {game_state.score}", True, (255, 255, 255))
         screen.blit(score_text, (self.config.WINDOW_WIDTH - score_text.get_width() - 20, self.config.WINDOW_HEIGHT - 40))
     
@@ -67,9 +67,9 @@ class HUDRenderer:
         pygame.draw.rect(screen, (200, 200, 200), (x, y, 300, 40), 2, border_radius=20)
         
         # Label
-        label_font = self._get_font(18)
+        label_font = self._get_font(14)
         label_text = label_font.render(f"{label} {current_health} / {max_health}", True, (255, 255, 255))
-        screen.blit(label_text, (x + 15, y + 8))
+        screen.blit(label_text, (x + 15, y + 14))
     
     def _get_phase_text(self, phase):
         """Get text for current phase"""
@@ -82,7 +82,7 @@ class HUDRenderer:
     
     def _draw_phase_indicator(self, screen, text):
         """Draw phase indicator with animation"""
-        phase_font = self._get_font(20)
+        phase_font = self._get_font(14)
         text_surface = phase_font.render(text, True, (255, 255, 255))
         text_width = text_surface.get_width()
         text_height = text_surface.get_height()
@@ -123,7 +123,7 @@ class HUDRenderer:
                 elif elapsed > 1.2:
                     alpha = int(255 * (1 - (elapsed - 1.2) / 0.3))
                 
-                fight_font = self._get_font(72)
+                fight_font = self._get_font(48)
                 fight_text = fight_font.render("FIGHT!", True, (255, 215, 0))
                 fight_text.set_alpha(alpha)
                 
@@ -155,7 +155,7 @@ class HUDRenderer:
                 # KO text
                 ko_text = "YOU WIN!" if self.player_won else "YOU LOSE!"
                 color = (0, 255, 0) if self.player_won else (255, 0, 0)
-                ko_font = self._get_font(72)
+                ko_font = self._get_font(48)
                 text_surface = ko_font.render(ko_text, True, color)
                 
                 # Outline effect

@@ -103,7 +103,7 @@ class MenuSystem:
         # Draw title
         try:
             if hasattr(self.config, 'FONT_PATH') and os.path.exists(self.config.FONT_PATH):
-                title_font = pygame.font.Font(self.config.FONT_PATH, 80)
+                title_font = pygame.font.Font(self.config.FONT_PATH, 48)
             else:
                 title_font = pygame.font.SysFont("Arial", 80)
         except Exception as e:
@@ -115,7 +115,7 @@ class MenuSystem:
         
         # Draw menu items
         try:
-            menu_font = pygame.font.Font(self.config.FONT_PATH, 48) if hasattr(self.config, 'FONT_PATH') else pygame.font.SysFont("Arial", 48)
+            menu_font = pygame.font.Font(self.config.FONT_PATH, 28) if hasattr(self.config, 'FONT_PATH') else pygame.font.SysFont("Arial", 48)
         except:
             menu_font = pygame.font.SysFont("Arial", 48)
         
@@ -138,7 +138,8 @@ class MenuSystem:
             if i == self.selected_item:
                 highlight = pygame.Surface((text.get_width() + 40, text.get_height() + 10), pygame.SRCALPHA)
                 pygame.draw.rect(highlight, (100, 100, 255, 100), highlight.get_rect(), border_radius=10)
-                screen.blit(highlight, (self.config.WINDOW_WIDTH//2 - highlight.get_width()//2, y_pos - 5))
+                highlight_rect = highlight.get_rect(center=(self.config.WINDOW_WIDTH//2, y_pos))
+                screen.blit(highlight, highlight_rect)
             
             screen.blit(text, text.get_rect(center=(self.config.WINDOW_WIDTH//2, y_pos)))
         
@@ -164,7 +165,7 @@ class MenuSystem:
             ]
         
         try:
-            instr_font = pygame.font.Font(self.config.FONT_PATH, 24) if hasattr(self.config, 'FONT_PATH') else pygame.font.SysFont("Arial", 24)
+            instr_font = pygame.font.Font(self.config.FONT_PATH, 14) if hasattr(self.config, 'FONT_PATH') else pygame.font.SysFont("Arial", 24)
         except:
             instr_font = pygame.font.SysFont("Arial", 24)
         

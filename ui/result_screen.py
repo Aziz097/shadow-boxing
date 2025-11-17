@@ -40,7 +40,7 @@ class ResultScreen:
         result_color = (0, 255, 0) if self.player_won else (255, 0, 0)
         
         try:
-            title_font = pygame.font.Font(self.config.FONT_PATH, 100)
+            title_font = pygame.font.Font(self.config.FONT_PATH, 60)
         except:
             title_font = pygame.font.SysFont("Arial", 100)
         
@@ -49,7 +49,7 @@ class ResultScreen:
         
         # Score
         try:
-            score_font = pygame.font.Font(self.config.FONT_PATH, 60)
+            score_font = pygame.font.Font(self.config.FONT_PATH, 36)
         except:
             score_font = pygame.font.SysFont("Arial", 60)
         
@@ -58,11 +58,11 @@ class ResultScreen:
         
         # Instructions
         try:
-            instr_font = pygame.font.Font(self.config.FONT_PATH, 36)
+            instr_font = pygame.font.Font(self.config.FONT_PATH, 22)
         except:
             instr_font = pygame.font.SysFont("Arial", 36)
         
-        restart_text = instr_font.render("PRESS SPACE TO RESTART", True, (255, 255, 255))
+        restart_text = instr_font.render("PRESS ENTER TO RESTART", True, (255, 255, 255))
         quit_text = instr_font.render("PRESS Q TO QUIT", True, (200, 200, 200))
         
         screen.blit(restart_text, restart_text.get_rect(center=(self.config.WINDOW_WIDTH//2, self.config.WINDOW_HEIGHT - 100)))
