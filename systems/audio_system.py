@@ -1,6 +1,5 @@
 import pygame
 import os
-from core import config
 
 class AudioSystem:
     def __init__(self, game_config):

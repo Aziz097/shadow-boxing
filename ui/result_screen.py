@@ -1,6 +1,5 @@
 import pygame
 import time
-from core import config
 
 class ResultScreen:
     def __init__(self, game_config):
@@ -62,7 +61,7 @@ class ResultScreen:
         except:
             instr_font = pygame.font.SysFont("Arial", 36)
         
-        restart_text = instr_font.render("PRESS SPACE TO RESTART", True, (255, 255, 255))
+        restart_text = instr_font.render("PRESS ENTER TO RESTART", True, (255, 255, 255))
         quit_text = instr_font.render("PRESS Q TO QUIT", True, (200, 200, 200))
         
         screen.blit(restart_text, restart_text.get_rect(center=(self.config.WINDOW_WIDTH//2, self.config.WINDOW_HEIGHT - 100)))

@@ -1,7 +1,6 @@
 import pygame
 import time
 import os
-from core import config as core_config
 import cv2
 
 class MenuSystem:

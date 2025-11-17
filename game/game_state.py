@@ -1,6 +1,6 @@
 import time
 import random
-from core import constants, config
+from core import constants
 from game.hit_box_system import HitBoxSystem
 from entities.enemy.enemy_attack_system import EnemyAttackSystem
 

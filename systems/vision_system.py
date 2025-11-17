@@ -1,9 +1,6 @@
 import cv2
 import mediapipe as mp
 import time
-import numpy as np
-from core import config
-from core.math_utils import distance
 
 class VisionSystem:
     def __init__(self, game_config):

@@ -1,8 +1,7 @@
-from core import config, constants
+from core import constants
 from core.utils import FontManager
 import pygame
 import time
-import os
 import math
 
 class HUDRenderer:
