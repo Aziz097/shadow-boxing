@@ -24,14 +24,11 @@ Sistem menggunakan MediaPipe untuk mendeteksi elemen-elemen tubuh penting sepert
 
 ## Laporan Logbook Mingguan
 
-| Tanggal    | Kegiatan                                                           | Hasil / Progress Pekerjaan                                                         |
-| ---------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| Tanggal | Kegiatan | Hasil / Progress Pekerjaan |
+| --- | --- | --- |
 | 10/28/2025 | Pembuatan Repositori github Shadow Boxing, dan pembagian pekerjaan | Repositori github tugas besar dan koordinasi tim terkait pembagian scope pekerjaan |
-| 11/9/2025  | Pemilihan Assets Fix & Rework FLow Game/Filter                     | Fiksasi assets (sound, filter, font), flow ui game                                 |
-| 11/10/2024 | Implementasi Core Game Systems | System camera, MediaPipe detection, audio manager, visual effects |
-| 11/10/2024 | Implementasi Game Mechanics | Punch detection, defense system (block & dodge), hitbox collision, combo system |
-| 11/10/2024 | UI/UX Development | Menu system, HUD, pause screen, round transitions, game over screen dengan custom font |
-| 11/10/2024 | Difficulty System & Optimization | 3 level kesulitan (Easy/Medium/Hard), text caching untuk performance, fullscreen support |
+| 11/9/2025 | Pemilihan Assets Fix & Rework FLow Game/Filter | Fiksasi assets (sound, filter, font), flow ui game |
+| 11/10/2024 | Implementasi Core Game Systems, Game Mechanics, UI/UX, serta Difficulty System & Optimization | - **Core Systems:** System camera, MediaPipe detection, audio manager, visual effects <br/> - **Game Mechanics:** Punch detection, defense system, hitbox, combo system <br/> - **UI/UX:** Menu system, HUD, pause screen, transitions, game over screen <br/> - **Difficulty & Optimization:** 3 level kesulitan, text caching, fullscreen support |
 
 ---
 
