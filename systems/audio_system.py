@@ -8,20 +8,20 @@ class AudioSystem:
         pygame.mixer.init()
         
         self.sounds = {
-            'ko': self._load_sound("KO.mp3"),
-            'player-punch': self._load_sound("player-punch.mp3"),
-            'enemy-punch': self._load_sound("enemy-punch.mp3"),
-            'enemy-punch-bloked': self._load_sound("punch-blocked.mp3"),
-            'enemy-punch-missed': self._load_sound("enemy-punch-missed.mp3"),
-            'round_1': self._load_sound(os.path.join("round", "round_1.mp3")),
-            'round_2': self._load_sound(os.path.join("round", "round_2.mp3")),
-            'round_3': self._load_sound(os.path.join("round", "final_round.mp3"))
+            'ko': self._load_sound("KO.wav"),
+            'player-punch': self._load_sound("player-punch.wav"),
+            'enemy-punch': self._load_sound("enemy-punch.wav"),
+            'enemy-punch-bloked': self._load_sound("punch-blocked.wav"),
+            'enemy-punch-missed': self._load_sound("enemy-punch-missed.wav"),
+            'round_1': self._load_sound(os.path.join("round", "round_1.wav")),
+            'round_2': self._load_sound(os.path.join("round", "round_2.wav")),
+            'round_3': self._load_sound(os.path.join("round", "final_round.wav"))
         }
         
         self.music = {
-            'menu': os.path.join(self.config.MUSIC_DIR, "menu_music.mp3"),
-            'fight': os.path.join(self.config.MUSIC_DIR, "fight_music.mp3"),
-            'ko': os.path.join(self.config.MUSIC_DIR, "ko_music.mp3")
+            'menu': os.path.join(self.config.MUSIC_DIR, "menu_music.wav"),
+            'fight': os.path.join(self.config.MUSIC_DIR, "fight_music.wav"),
+            'ko': os.path.join(self.config.MUSIC_DIR, "ko_music.wav")
         }
     
     def _load_sound(self, filename):

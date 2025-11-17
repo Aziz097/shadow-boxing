@@ -11,8 +11,8 @@ class Config:
     ASSETS_DIR = os.path.join(BASE_DIR, "assets")
     FONT_DIR = os.path.join(ASSETS_DIR, "font")
     SPRITES_DIR = os.path.join(ASSETS_DIR, "sprites")
-    SFX_DIR = os.path.join(ASSETS_DIR, "sfx")
-    MUSIC_DIR = os.path.join(ASSETS_DIR, "music")
+    SFX_DIR = os.path.join(ASSETS_DIR, "wav", "sfx")
+    MUSIC_DIR = os.path.join(ASSETS_DIR, "wav", "music")
     
     FONT_PATH = os.path.join(FONT_DIR, "PressStart2P.ttf") 
     
