@@ -1,6 +1,6 @@
 # Shadow Boxing — Game Boxing Interactive Mediapipe
 
-_“Boxing with mediapipe🥊”_
+_“Boxing with mediapipe🥊 - Play with Energy”_
 
 ---
 
