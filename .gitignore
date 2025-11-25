@@ -49,7 +49,6 @@ Thumbs.db
 # Game specific
 *.avi
 *.mp4
-screenshots/
 recordings/
 
 # Testing
