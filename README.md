@@ -461,7 +461,7 @@ Project Link: [https://github.com/Aziz097/shadow-boxing](https://github.com/Aziz
 [issues-shield]: https://img.shields.io/github/issues/Aziz097/shadow-boxing.svg?style=for-the-badge
 [issues-url]: https://github.com/Aziz097/shadow-boxing/issues
 [license-shield]: https://img.shields.io/github/license/Aziz097/shadow-boxing.svg?style=for-the-badge
-[license-url]: https://github.com/Aziz097/shadow-boxing/blob/master/LICENSE
+[license-url]: https://github.com/Aziz097/shadow-boxing/blob/main/LICENSE
 [python-shield]: https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white
 [python-url]: https://www.python.org/
 
