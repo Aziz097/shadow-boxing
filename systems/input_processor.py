@@ -57,6 +57,9 @@ class InputProcessor:
                 # Check if fist
                 is_fist = self._is_fist(landmarks)
                 
+                # Print key hand landmarks for debugging (only on hit)
+                # Reduced printing to avoid spam - will print on actual hits
+                
                 # Store hand state
                 self.hand_states[hand_label] = {
                     'is_fist': is_fist,
@@ -67,18 +70,49 @@ class InputProcessor:
                 
                 # Process based on game phase
                 if game_state.phase == constants.PHASE_STATES['PLAYER_ATTACK']:
-                    # Player attack - check for punch hits using landmark 9 (middle_finger_mcp)
+                    # Player attack - check for punch hits using ANY hand landmark (3-20)
                     if is_fist and hasattr(game_state, 'hitbox_system'):
-                        # Use landmark 9 for more accurate hit detection
-                        hit_result = game_state.hitbox_system.check_hit(
-                            landmark_9_pos[0], landmark_9_pos[1], is_fist
-                        )
+                        # Check all landmarks from index 3-20 (exclude wrist 0,1,2)
+                        hit_result = None
+                        for landmark_idx in range(3, 21):
+                            lm_x = int(landmarks[landmark_idx].x * self.config.CAMERA_WIDTH)
+                            lm_y = int(landmarks[landmark_idx].y * self.config.CAMERA_HEIGHT)
+                            
+                            hit_result = game_state.hitbox_system.check_hit(lm_x, lm_y, is_fist)
+                            if hit_result:
+                                break  # Stop checking once we found a hit
                         
                         if hit_result:
-                            # Apply damage to enemy (prevent negative health)
-                            game_state.enemy_health = max(0, game_state.enemy_health - hit_result['damage'])
-                            game_state.combo_count = hit_result['combo']
-                            game_state.score += hit_result['damage'] * hit_result['combo']
+                            # Print hand landmarks on successful hit
+                            damage = hit_result.get('damage', 0)
+                            is_last = hit_result.get('is_last_hit', False)
+                            punch_type = hit_result.get('punch_type', 'PUNCH')
+                            
+                            print(f"\n🤛 {hand_label} FIST HIT - Key landmarks:")
+                            print(f"   Wrist[0]: ({hand_pos[0]:4d}, {hand_pos[1]:4d})")
+                            print(f"   MCP[9]:   ({landmark_9_pos[0]:4d}, {landmark_9_pos[1]:4d})")
+                            for i, tip in enumerate(fingertips):
+                                tip_names = ['Index', 'Middle', 'Ring', 'Pinky']
+                                print(f"   {tip_names[i]:6s}:  ({tip[0]:4d}, {tip[1]:4d})")
+                            
+                            # Apply damage immediately to enemy
+                            game_state.enemy_health = max(0, game_state.enemy_health - damage)
+                            game_state.score += damage
+                            
+                            bonus_text = " (FINAL HIT +10%!)" if is_last else ""
+                            print(f"💥 {punch_type} Hit! {damage} damage{bonus_text}")
+                            print(f"   Enemy health: {game_state.enemy_health + damage} → {game_state.enemy_health}")
+                            
+                            # Register hit to combo system
+                            hitbox_id = hit_result.get('hitbox_id')
+                            if hitbox_id is not None:
+                                game_state.register_hit(hitbox_id)
+                            
+                            # Spawn next hitbox if not last
+                            if not is_last:
+                                spawned = game_state.hitbox_system.spawn_next_hitbox()
+                                if spawned:
+                                    print(f"   → Next target spawned!")
                             
                             # Play player punch sound
                             game_state.play_sound('player-punch')
@@ -89,16 +123,17 @@ class InputProcessor:
                             
                             game_state.vfx_hits.append({
                                 'position': hit_result['position'],
-                                'damage': hit_result['damage'],
+                                'damage': damage,
                                 'time': current_time
                             })
                             
-                            # Play sound
+                            # Play sound based on hit type
                             if hasattr(game_state, 'play_sound'):
-                                if hit_result['combo'] >= 3:
+                                if is_last:
                                     game_state.play_sound("strong_punch")
                                 else:
                                     game_state.play_sound("weak_punch")
+
         
         # Check defense during enemy attack
         if game_state.phase in [constants.PHASE_STATES['ENEMY_ATTACK_WARNING'], 

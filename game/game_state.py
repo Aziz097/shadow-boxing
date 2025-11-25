@@ -5,6 +5,7 @@ import random
 from core import constants
 from game.hit_box_system import HitBoxSystem
 from game.enemy_attack_system import EnemyAttackSystem
+from game.combo_system import ComboSystem
 
 class GameState:
     def __init__(self, game_config):
@@ -39,9 +40,15 @@ class GameState:
         # Initialize systems
         self.hitbox_system = HitBoxSystem(game_config)
         self.enemy_attack_system = EnemyAttackSystem(game_config)
+        self.combo_system = ComboSystem(game_config)
         
-        # Phase duration (3 seconds for player attack)
-        self.player_attack_duration = 3.0
+        # Combo tracking
+        self.current_combo_name = None
+        self.combo_active = False
+        self.hit_hitboxes = {}  # Track which hitboxes were hit and when
+        
+        # Phase duration (4 seconds for player attack)
+        self.player_attack_duration = 4.0
         self.enemy_damage_applied = False
         
     def start_game(self):
@@ -58,7 +65,7 @@ class GameState:
         self.result_shown = False  # Reset result flag
         
     def start_round(self, round_num):
-        """Start a specific round with hitbox generation"""
+        """Start a specific round with combo-based hitbox generation"""
         self.current_state = constants.GAME_STATES['PLAYING']
         self.current_round = round_num
         self.phase = constants.PHASE_STATES['PLAYER_ATTACK']
@@ -66,9 +73,20 @@ class GameState:
         self.splash_played = True
         self.round_start_time = time.time()
         self.phase_start_time = time.time()
+        self.hit_hitboxes = {}  # Reset hit tracking
         
-        # Generate hitboxes for player attack (pass face_bbox to avoid face area)
-        self.hitbox_system.generate_hitboxes(face_bbox=self.face_bbox)
+        # Start new combo
+        difficulty = self.config.DEFAULT_DIFFICULTY
+        combo_data = self.combo_system.start_new_combo(difficulty)
+        self.current_combo_name = combo_data['name']
+        self.combo_active = True
+        
+        # Generate hitboxes with combo sequence and pose landmarks
+        self.hitbox_system.generate_hitboxes(
+            face_bbox=self.face_bbox,
+            combo_sequence=combo_data['sequence'],
+            pose_landmarks=self.pose_landmarks
+        )
         
         # Reset enemy attack system
         self.enemy_attack_system.reset()
@@ -159,17 +177,26 @@ class GameState:
         phase_elapsed = current_time - self.phase_start_time
         
         if self.phase == constants.PHASE_STATES['PLAYER_ATTACK']:
-            # Player attack phase - 3 seconds
-            if phase_elapsed >= self.player_attack_duration:
-                # Calculate total damage from hit hitboxes
-                hit_count = self.hitbox_system.get_hit_count()
-                if hit_count > 0:
-                    print(f"Player hit {hit_count} targets!")
+            # Player attack phase - check for combo completion or 4s timeout
+            combo_complete = self.combo_system.is_combo_complete()
+            
+            if phase_elapsed >= self.player_attack_duration or combo_complete:
+                # Show result summary
+                perf = self.combo_system.get_performance_summary()
+                hit_count = perf['hits']
+                total_count = perf['total']
+                
+                if combo_complete:
+                    print(f"\n✅ COMBO COMPLETE! All {total_count} hits landed!")
+                elif hit_count > 0:
+                    print(f"\n⚠️  Combo incomplete: {hit_count}/{total_count} hits (timeout)")
+                else:
+                    print(f"\n❌ No hits landed (timeout)")
                 
                 # Transition to enemy attack warning
                 self.phase = constants.PHASE_STATES['ENEMY_ATTACK_WARNING']
                 self.phase_start_time = current_time
-                self.combo_count = 0  # Reset combo for next phase
+                self.combo_active = False
                 
                 # Check if enemy still alive before starting attack
                 if self.enemy_health <= 0:
@@ -180,9 +207,17 @@ class GameState:
                 if self.face_bbox is not None or self.pose_landmarks is not None:
                     self.enemy_attack_system.start_attack(self.face_bbox, current_time, self.pose_landmarks)
                 else:
+                    # Restart player attack if no face detected
                     self.phase = constants.PHASE_STATES['PLAYER_ATTACK']
                     self.phase_start_time = current_time
-                    self.hitbox_system.generate_hitboxes(face_bbox=self.face_bbox)
+                    difficulty = self.config.DEFAULT_DIFFICULTY
+                    combo_data = self.combo_system.start_new_combo(difficulty)
+                    self.current_combo_name = combo_data['name']
+                    self.combo_active = True
+                    self.hitbox_system.generate_hitboxes(
+                        face_bbox=self.face_bbox,
+                        combo_sequence=combo_data['sequence']
+                    )
         
         elif self.phase == constants.PHASE_STATES['ENEMY_ATTACK_WARNING']:
             # Warning phase - target icon visible
@@ -218,10 +253,23 @@ class GameState:
                         self.game_over(False)
                         return
                     
-                    # Reset to player attack phase
+                    # Reset to player attack phase with NEW COMBO
+                    print(f"\n🔄 Transitioning: Enemy Attack → Player Attack")
                     self.phase = constants.PHASE_STATES['PLAYER_ATTACK']
                     self.phase_start_time = current_time
-                    self.hitbox_system.generate_hitboxes(face_bbox=self.face_bbox)  # Pass face_bbox
+                    
+                    # Start NEW combo (sequential mode)
+                    difficulty = self.config.DEFAULT_DIFFICULTY
+                    combo_data = self.combo_system.start_new_combo(difficulty)
+                    self.current_combo_name = combo_data['name']
+                    self.combo_active = True
+                    print(f"   New combo: {combo_data['name']} ({len(combo_data['sequence'])} hits)")
+                    
+                    # Generate sequential hitboxes
+                    self.hitbox_system.generate_hitboxes(
+                        face_bbox=self.face_bbox,
+                        combo_sequence=combo_data['sequence']
+                    )
                     self.hit_hitboxes = {}
                     self.combo_count = 0
                     self.enemy_damage_applied = False
@@ -287,9 +335,17 @@ class GameState:
         return 0
     
     def register_hit(self, hitbox):
-        """Register a hit on a hitbox"""
+        """Register a hit on a hitbox with sequence tracking"""
         if hitbox not in self.hit_hitboxes:
-            self.hit_hitboxes[hitbox] = time.time()  # Simpan waktu hit
+            hit_time = time.time()
+            self.hit_hitboxes[hitbox] = hit_time
+            
+            # Register hit in combo sequence
+            if self.combo_active:
+                progress = self.combo_system.register_hit(hit_time)
+                combo_len = len(self.combo_system.combo_sequence)
+                print(f"✓ Combo hit {progress}/{combo_len}")
+                
             self.combo_count += 1
             return self.combo_count
         return 0

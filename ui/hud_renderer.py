@@ -39,11 +39,21 @@ class HUDRenderer:
         screen.blit(timer_bg, (self.config.WINDOW_WIDTH//2 - 75, 10))
         screen.blit(timer_text, timer_text.get_rect(center=(self.config.WINDOW_WIDTH//2, 60)))
         
-        # Combo counter
-        if game_state.combo_count > 0:
-            combo_font = self._get_font(16)
-            combo_text = combo_font.render(f"COMBO x{game_state.combo_count}", True, (255, 215, 0))
-            screen.blit(combo_text, (self.config.WINDOW_WIDTH//2 - combo_text.get_width()//2, 150))
+        # Combo system display
+        if hasattr(game_state, 'combo_active') and game_state.combo_active:
+            # Combo name at top
+            combo_font = self._get_font(18)
+            combo_name = getattr(game_state, 'current_combo_name', '')
+            if combo_name:
+                combo_text = combo_font.render(combo_name, True, (255, 215, 0))
+                screen.blit(combo_text, (self.config.WINDOW_WIDTH//2 - combo_text.get_width()//2, 130))
+            
+            # Combo progress display
+            if hasattr(game_state, 'combo_system'):
+                combo_display = game_state.combo_system.get_combo_display()
+                progress_font = self._get_font(14)
+                progress_text = progress_font.render(combo_display, True, (255, 255, 255))
+                screen.blit(progress_text, (self.config.WINDOW_WIDTH//2 - progress_text.get_width()//2, 155))
         
         # Phase indicator
         phase_text = self._get_phase_text(game_state.phase)

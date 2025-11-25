@@ -62,9 +62,11 @@ class EnemyAttackSystem:
         self.glove_position = None
         self.glove_progress = 0
         
-        # Initialize combo attack (3-4 attacks)
+        # Initialize combo attack (2-3 attacks to fit in 4s max)
+        # Total duration: warning + attacks×(0.5s attack + 0.4s delay)
+        # Max: 1.2s + 3×0.9s = 3.9s
         self.combo_count = 0
-        self.combo_max = random.randint(3, 4)
+        self.combo_max = random.randint(2, 3)
         
         # Set warning duration based on difficulty
         difficulty = self.config.get_difficulty_settings()

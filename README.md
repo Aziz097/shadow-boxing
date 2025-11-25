@@ -1,52 +1,145 @@
-# Shadow Boxing — Game Boxing Interactive Mediapipe
+<div align="center">
+  <a href="https://github.com/Aziz097/shadow-boxing">
+    <img src="images/logo.png" alt="Logo" width="200" height="200">
+  </a>
 
-_“Boxing with mediapipe🥊 - Play with Energy”_
+  <h2 align="center">Shadow Boxing</h2>
 
----
+  <p align="center">
+    Interactive AI-Powered Boxing Game with Real-Time Motion Detection
+    <br />
+    <a href="https://github.com/Aziz097/shadow-boxing"><strong>Explore the docs »</strong></a>
+    <br /><br />
+    <a href="https://github.com/Aziz097/shadow-boxing">View Demo</a>
+    ·
+    <a href="https://github.com/Aziz097/shadow-boxing/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
+    ·
+    <a href="https://github.com/Aziz097/shadow-boxing/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
+  </p>
+</div>
 
-## Deskripsi Proyek
+<!-- BADGES -->
+<div align="center">
 
-Shadow Boxing merupakan proyek filter interaktif berbasis multimedia yang menggabungkan computer vision, audio processing, dan video processing yang mensimulasikan pertandingan tinju melawan lawan virtual secara real-time. 
+[![Python Version][python-shield]][python-url]
+[![MIT License][license-shield]][license-url]
+[![Contributors][contributors-shield]][contributors-url]
+[![Issues][issues-shield]][issues-url]
 
-Sistem menggunakan MediaPipe untuk mendeteksi elemen-elemen tubuh penting seperti wajah, kepalan tangan, dan posisi tangan. Dari deteksi ini, aplikasi mampu mengenali gerakan menyerang (pukulan) dan bertahan (menutup wajah). Setiap aksi akan memicu efek visual (seperti efek “babak belur” pada wajah) serta efek suara (sound effects) sehingga menciptakan pengalaman bermain yang interaktif.
+</div>
 
----
+<!-- TABLE OF CONTENTS -->
+<details>
+  <summary>Table of Contents</summary>
+  <ol>
+    <li>
+      <a href="#about-the-project">About The Project</a>
+      <ul>
+        <li><a href="#built-with">Built With</a></li>
+        <li><a href="#key-features">Key Features</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="#getting-started">Getting Started</a>
+      <ul>
+        <li><a href="#prerequisites">Prerequisites</a></li>
+        <li><a href="#installation">Installation</a></li>
+      </ul>
+    </li>
+    <li><a href="#usage">Usage</a></li>
+    <li><a href="#game-mechanics">Game Mechanics</a></li>
+    <li><a href="#project-structure">Project Structure</a></li>
+    <li><a href="#logbook">Development Logbook</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#contributing">Contributing</a></li>
+    <li><a href="#license">License</a></li>
+    <li><a href="#team">Team</a></li>
+    <li><a href="#acknowledgments">Acknowledgments</a></li>
+  </ol>
+</details>
 
-## Anggota Tim
+<!-- ABOUT THE PROJECT -->
+## About The Project
 
-| Nama Lengkap    | NIM       | ID GitHub                                    |
-| --------------- | --------- | -------------------------------------------- |
-| Aziz Kurniawan  | 122140097 | [@Aziz097](https://github.com/Aziz097)       |
-| Harisya Miranti | 122140049 | [@harisya14](https://github.com/harisya14)   |
-| Muhammad Yusuf  | 122140193 | [@muhamyusuf](https://github.com/muhamyusuf) |
+[![Shadow Boxing Demo][product-screenshot]](https://github.com/Aziz097/shadow-boxing)
 
----
+**Shadow Boxing** adalah game boxing interaktif berbasis computer vision yang menggabungkan teknologi MediaPipe untuk mendeteksi gerakan real-time. Rasakan sensasi bertarung melawan lawan virtual dengan deteksi pukulan dan pertahanan yang akurat menggunakan webcam Anda!
 
-## Laporan Logbook Mingguan
+### Why Shadow Boxing?
 
-| Tanggal | Kegiatan | Hasil / Progress Pekerjaan |
-| --- | --- | --- |
-| 10/28/2025 | Pembuatan Repositori github Shadow Boxing, dan pembagian pekerjaan | Repositori github tugas besar dan koordinasi tim terkait pembagian scope pekerjaan |
-| 11/9/2025 | Pemilihan Assets Fix & Rework FLow Game/Filter | Fiksasi assets (sound, filter, font), flow ui game |
-| 11/10/2025 | Implementasi Core Game Systems, Game Mechanics, UI/UX, serta Difficulty System & Optimization | - **Core Systems:** System camera, MediaPipe detection, audio manager, visual effects <br/> - **Game Mechanics:** Punch detection, defense system, hitbox, combo system <br/> - **UI/UX:** Menu system, HUD, pause screen, transitions, game over screen <br/> - **Difficulty & Optimization:** 3 level kesulitan, text caching, fullscreen support |
-| 11/17/2025 | Audio Processing, UI/UX Polish, dan Automation Script | - **Audio Processing:** Konversi wav ke WAV format MIREX (44100 Hz, mono, 16-bit PCM), analisis dan normalisasi LUFS ke -16 dB untuk konsistensi audio <br/> - **UI/UX Polish:** Penyesuaian ukuran font PressStart2P untuk proporsi lebih baik, perbaikan alignment highlight background pada menu items <br/> - **Automation:** Pembuatan launcher script (shadow_boxing.bat & shadow_boxing.sh) dengan auto-check dependencies dan instalasi otomatis |
-| 11/18/2025 | Code Refactoring & Clean Code Implementation | - **Restructuring:** Flatten entities folder structure, hapus subfolder yang tidak perlu <br/> - **Dead Code Removal:** Hapus ai_controller.py yang tidak digunakan <br/> - **Documentation:** Tambah module docstring di semua file, inline comments untuk logika kompleks <br/> - **Import Optimization:** Bersihkan import yang tidak terpakai, simplify import paths <br/> - **Clean Code Principles:** Apply SRP, DRY, clear naming conventions |
+* 🥊 **Real-time Motion Tracking** - Deteksi akurat untuk punch, defense, dan dodge menggunakan MediaPipe
+* 🎮 **Interactive Gameplay** - Sistem combo, phase-based combat, dan dynamic difficulty
+* 🔊 **Immersive Audio** - Sound effects dan background music yang menambah pengalaman bermain
+* 🎯 **Smart Hitbox System** - Sequential spawning dengan position-based placement dan collision detection
+* 📊 **Progressive Difficulty** - 3 level kesulitan dengan parameter yang dapat disesuaikan
+* 💻 **Cross-Platform** - Berjalan di Windows, Linux, dan macOS
 
----
+<p align="right">(<a href="#top">back to top</a>)</p>
 
-## Cara Menggunakan
+### Built With
+
+Teknologi utama yang digunakan dalam project ini:
+
+* [![Python][Python.org]][Python-url]
+* [![OpenCV][OpenCV.org]][OpenCV-url]
+* [![MediaPipe][MediaPipe.dev]][MediaPipe-url]
+* [![Pygame][Pygame.org]][Pygame-url]
+* [![NumPy][NumPy.org]][NumPy-url]
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+### Key Features
+
+#### 🎯 Advanced Vision System
+- **MediaPipe Integration**: Hand tracking (21 landmarks), pose detection (33 landmarks), face mesh (468 landmarks)
+- **Multi-hand Detection**: Simultaneous tracking untuk kedua tangan
+- **Fist Detection Algorithm**: Angle-based detection dengan threshold tuning
+- **Defense Recognition**: Face coverage detection dan dodge mechanism
+
+#### 🥊 Combat Mechanics
+- **Sequential Hitbox System**: Hit-to-spawn mechanism dengan minimum distance constraint
+- **Position-based Placement**: JAB spawns kiri, CROSS/HOOK spawns kanan
+- **Combo System**: 6 combo patterns (JAB JAB, JAB CROSS, JAB JAB CROSS, dst)
+- **Damage Calculation**: Base damage × last hit multiplier (1.1x)
+- **Enemy AI**: 3-4 combo attacks dengan warning time dan cooldown
+
+#### 🎨 Visual Effects
+- **Real-time Rendering**: Pygame-based graphics dengan OpenCV integration
+- **Dynamic HUD**: Health bars, combo counter, timer, phase indicator
+- **Round Transitions**: Animated splash screens dan fight overlay
+- **VFX System**: Hit effects, damage numbers, screen shake
+
+#### 🔊 Audio System
+- **LUFS Normalization**: Consistent audio levels at -16 dB
+- **Dynamic Sound**: Context-aware SFX (punch, hit, ko, round announcements)
+- **Background Music**: Phase-specific BGM (menu, fight, ko)
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+<!-- GETTING STARTED -->
+## Getting Started
+
+Ikuti langkah-langkah berikut untuk menjalankan game di local machine Anda.
 
 ### Prerequisites
-- Python 3.10+
-- Webcam
-- Windows/Linux/Mac
 
-### Quick Start (Recommended)
+* **Python 3.10 atau lebih tinggi**
+  ```sh
+  python --version
+  ```
 
-Gunakan script launcher yang sudah disediakan untuk memudahkan instalasi dan menjalankan game:
+* **Webcam** (built-in atau external)
+
+* **Dependencies** akan otomatis terinstall via launcher script
+
+### Installation
+
+#### Option 1: Quick Start (Recommended)
+
+Gunakan launcher script untuk instalasi dan menjalankan game secara otomatis:
 
 **Windows:**
-```bash
+```powershell
 shadow_boxing.bat
 ```
 
@@ -57,266 +150,331 @@ chmod +x shadow_boxing.sh
 ```
 
 Script akan otomatis:
-- Memeriksa instalasi Python
-- Mengecek dan menginstall dependencies yang diperlukan
-- Menjalankan game
-
-### Manual Installation
-
-Jika ingin instalasi manual:
-
-1. **Clone repository:**
-```bash
-git clone https://github.com/Aziz097/shadow-boxing.git
-cd shadow-boxing
-```
-
-2. **Buat virtual environment (opsional):**
-```bash
-python -m venv shadow-boxing-venv
-```
-
-3. **Aktifkan virtual environment:**
-
-**Windows:**
-```powershell
-.\shadow-boxing-venv\Scripts\Activate.ps1
-```
-
-**Linux/Mac:**
-```bash
-source shadow-boxing-venv/bin/activate
-```
-
-4. **Install dependencies:**
-```bash
-pip install -r requirements.txt
-```
-
-5. **Jalankan game:**
-```bash
-python main.py
-```
+- ✅ Memeriksa instalasi Python
+- ✅ Mengecek dan menginstall dependencies
+- ✅ Menjalankan game
 
 ---
 
-## Kontrol Game
+#### Option 2: Manual Installation
+
+1. **Clone repository**
+   ```sh
+   git clone https://github.com/Aziz097/shadow-boxing.git
+   cd shadow-boxing
+   ```
+
+2. **Buat virtual environment** (opsional tapi recommended)
+   ```sh
+   python -m venv venv
+   ```
+
+3. **Aktifkan virtual environment**
+   
+   **Windows:**
+   ```powershell
+   .\venv\Scripts\Activate.ps1
+   ```
+   
+   **Linux/Mac:**
+   ```bash
+   source venv/bin/activate
+   ```
+
+4. **Install dependencies**
+   ```sh
+   pip install -r requirements.txt
+   ```
+
+5. **Jalankan game**
+   ```sh
+   python main.py
+   ```
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+<!-- USAGE -->
+## Usage
+
+### Controls
 
 | Key | Action |
 |-----|--------|
-| **ENTER** | Mulai game |
-| **ESC** | Pause/Resume |
-| **Q** | Keluar game |
+| `ENTER` | Start Game / Select Menu |
+| `ESC` | Pause / Resume Game |
+| `Q` | Quit Game |
+| `↑` `↓` | Navigate Menu |
 
----
+### Gameplay Tips
 
-## Mekanik Game
+1. **Position Yourself** - Pastikan wajah dan tangan terlihat jelas di kamera
+2. **Good Lighting** - Pencahayaan yang baik meningkatkan akurasi deteksi
+3. **Make a Fist** - Kepalkan tangan dengan rapat untuk punch detection
+4. **Combo Awareness** - Perhatikan combo instruction di layar (JAB JAB CROSS)
+5. **Defense Timing** - Tutup wajah atau dodge saat warning muncul
 
-### Fase Serangan Player (3 detik)
-- 2-4 kotak hitbox muncul secara random di area layar
-- Pukul ke arah hitbox dengan kepalan tangan untuk mengenainya
-- **Damage berdasarkan Combo:**
-  - 4 hits = 25% damage 
-  - 3 hits = 20% damage 
-  - 2 hits = 15% damage
-  - 1 hit = 10% damage 
+### Demo
 
-### Fase Serangan Enemy (Combo 3-4 Attacks)
-- **Target Icon (Red Dot)**: Muncul di area wajah player (prioritas face detection, fallback ke pose landmarks 0-10 untuk area kepala)
-- **Warning Time**: Durasi sebelum serangan aktual:
+![Gameplay Demo][demo-gif]
+
+### Screenshots
+
+<div align="center">
+  <img src="images/screenshots/home.png" alt="Main Menu" width="45%">
+  <img src="images/screenshots/select difficulty.png" alt="Select Difficulty" width="45%">
+  <img src="images/screenshots/ingame.png" alt="Gameplay" width="45%">
+  <img src="images/screenshots/rest.png" alt="Round Transition" width="45%">
+  <img src="images/screenshots/ko.png" alt="Game Over" width="45%">
+  <img src="images/screenshots/result.png" alt="Results" width="45%">
+</div>
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+<!-- GAME MECHANICS -->
+## Game Mechanics
+
+### Phase System
+
+#### 🟢 Player Attack Phase (4 seconds)
+- **Sequential Hitbox Spawning**: Hitbox berikutnya muncul setelah hitbox sebelumnya dipukul
+- **Position-based Targets**: 
+  - JAB: Spawn di sisi kiri (0-50% width)
+  - CROSS/HOOK: Spawn di sisi kanan (50-100% width)
+- **Exclusion Zones**: Hitbox tidak spawn di area wajah dan body landmarks (shoulders, hips)
+- **Minimum Distance**: 150px dari hitbox sebelumnya
+- **Damage System**:
+  - JAB: 8 damage base
+  - CROSS: 15 damage base
+  - HOOK: 12 damage base
+  - Last hit bonus: **+10%** (1.1x multiplier)
+
+#### 🔴 Enemy Attack Phase
+- **Warning Time**: Visual indicator sebelum serangan aktual
   - Easy: 1.2 detik
-  - Medium: 1.0 detik  
+  - Medium: 1.0 detik
   - Hard: 0.8 detik
-- **Defense System**:
-  - **Block**: Tutup wajah dengan tangan untuk mengurangi damage 80% (damage × 0.2)
-  - **Dodge**: Gerakkan kepala keluar dari target area untuk menghindari damage 100%
-- **Damage per Attack**: Random 10-30 HP (dimodifikasi oleh difficulty multiplier)
-- **Combo Attack**: Enemy menyerang 3-4 kali berturut-turut dengan delay 400ms antar serangan
+- **Combo System**: 2-3 serangan berturut-turut dengan delay 400ms
+- **Target Area**: Face detection (prioritas) atau pose landmarks 0-10 (fallback)
+- **Defense Mechanisms**:
+  - **Block**: Tutup wajah dengan tangan → Damage × 0.2 (80% reduction)
+  - **Dodge**: Gerakkan kepala keluar dari target area → 100% avoid
 
-### Kondisi Menang
-- Health tertinggi setelah 3 ronde menang
-- KO jika health mencapai 0
+### Difficulty Levels
 
----
+| Level | Enemy Cooldown | Damage Multiplier | Warning Time | Player Attack |
+|-------|---------------|-------------------|--------------|---------------|
+| **Easy** | 3.0-5.0s | 0.7x | 1.2s | 4s |
+| **Medium** | 2.0-3.5s | 1.0x | 1.0s | 4s |
+| **Hard** | 1.5-2.5s | 1.3x | 0.8s | 4s |
 
-## Struktur Project
+### Win Conditions
+
+- ✅ **Victory**: Health tertinggi setelah 3 ronde
+- ❌ **Defeat**: Health mencapai 0 (KO)
+- 🏆 **Perfect Win**: Tidak menerima damage sama sekali
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+<!-- PROJECT STRUCTURE -->
+## Project Structure
 
 ```
 shadow-boxing/
-├── main.py                      # Entry point dan game loop utama
-├── requirements.txt             # Python dependencies
-├── README.md                    # Dokumentasi lengkap
-├── shadow_boxing.bat            # Launcher script Windows
-├── shadow_boxing.sh             # Launcher script Linux/Mac
+├── 📄 main.py                      # Entry point & game loop
+├── 📄 requirements.txt             # Python dependencies
+├── 📄 README.md                    # Dokumentasi
+├── 🔧 shadow_boxing.bat            # Windows launcher
+├── 🔧 shadow_boxing.sh             # Linux/Mac launcher
 │
-├── core/                        # Konfigurasi dan utilities inti
-│   ├── config.py                # Centralized game settings
-│   ├── constants.py             # Game constants dan difficulty
-│   ├── math_utils.py            # Fungsi matematika (angle, distance)
-│   ├── utils.py                 # Font manager dan image helpers
-│   └── __init__.py
+├── 📁 core/                        # Core utilities
+│   ├── config.py                   # Centralized settings
+│   ├── constants.py                # Game constants
+│   ├── math_utils.py               # Math helpers (angle, distance)
+│   └── utils.py                    # Font manager, image helpers
 │
-├── systems/                     # Sistem-sistem inti game
-│   ├── vision_system.py         # MediaPipe integration (hands, pose, face)
-│   ├── audio_system.py          # Sound effects dan background music
-│   ├── render_system.py         # Graphics rendering dan visual effects
-│   ├── input_processor.py       # Deteksi punch dan defense
-│   └── __init__.py
+├── 📁 systems/                     # Game systems
+│   ├── vision_system.py            # MediaPipe integration
+│   ├── audio_system.py             # Sound & music manager
+│   ├── render_system.py            # Graphics rendering
+│   └── input_processor.py          # Punch & defense detection
 │
-├── entities/                    # Game entities
-│   ├── player.py                # Player state, health, combo, scoring
-│   ├── enemy.py                 # Enemy state, health, attack timing
-│   └── __init__.py
+├── 📁 entities/                    # Game entities
+│   ├── player.py                   # Player state & health
+│   └── enemy.py                    # Enemy state & AI
 │
-├── game/                        # Game logic layer
-│   ├── game_state.py            # State management, phase transitions
-│   ├── hit_box_system.py        # Hitbox generation dan collision
-│   ├── enemy_attack_system.py   # Enemy attack mechanics dan combo
-│   └── __init__.py
+├── 📁 game/                        # Game logic
+│   ├── game_state.py               # State management
+│   ├── hit_box_system.py           # Hitbox generation & collision
+│   ├── combo_system.py             # Combo patterns
+│   └── enemy_attack_system.py      # Enemy attack mechanics
 │
-├── ui/                          # User interface components
-│   ├── menu_system.py           # Main menu dan navigation
-│   ├── hud_renderer.py          # Health bars, timer, combo counter
-│   ├── fight_overlay.py         # Round splash screens
-│   ├── result_screen.py         # Game over screen
-│   └── __init__.py
+├── 📁 ui/                          # User interface
+│   ├── menu_system.py              # Main menu
+│   ├── hud_renderer.py             # HUD elements
+│   ├── fight_overlay.py            # Round transitions
+│   └── result_screen.py            # Game over screen
 │
-└── assets/                      # Game assets
-    ├── font/                    # Custom fonts
-    │   └── PressStart2P.ttf
-    ├── sprites/                 # Game images (helm, gloves, ko, etc)
-    ├── sfx/                     # Sound effects (punch, ko, rounds)
-    └── music/                   # Background music (menu, fight, ko)
+└── 📁 assets/                      # Game assets
+    ├── font/                       # PressStart2P.ttf
+    ├── sprites/                    # Helm, gloves, KO
+    ├── sfx/                        # Sound effects
+    └── music/                      # Background music
 ```
 
----
+### Architecture Principles
 
-## Clean Code Principles
+✅ **Separation of Concerns**: Modular structure dengan clear responsibilities  
+✅ **Single Responsibility**: Setiap class memiliki satu tugas spesifik  
+✅ **DRY Principle**: Reusable utilities dan singleton patterns  
+✅ **Clear Naming**: Descriptive variable dan function names  
+✅ **Documentation**: Module docstrings dan inline comments  
 
-Proyek ini menerapkan prinsip-prinsip clean code untuk maintainability dan readability:
+<p align="right">(<a href="#top">back to top</a>)</p>
 
-### 1. **Separation of Concerns**
-- **Core**: Konfigurasi dan utilities yang reusable
-- **Systems**: Sistem-sistem independen (vision, audio, render, input)
-- **Entities**: Business logic untuk player dan enemy
-- **Game**: Game-specific logic (state, hitbox, attack)
-- **UI**: Presentation layer yang terpisah
+<!-- LOGBOOK -->
+## Development Logbook
 
-### 2. **Single Responsibility Principle**
-Setiap class memiliki satu tanggung jawab yang jelas:
-- `VisionSystem`: Hanya handle MediaPipe detection
-- `AudioSystem`: Hanya handle sound dan music
-- `GameState`: Hanya manage game flow dan state transitions
-- `HitBoxSystem`: Hanya manage hitbox generation dan collision
+| Tanggal | Kegiatan | Hasil / Progress Pekerjaan |
+|---------|----------|----------------------------|
+| **10/28/2024** | Project Initialization | • Repository setup • Team coordination • Scope definition |
+| **11/09/2024** | Asset Selection & Flow Design | • Fixed assets (sound, sprites, font) • Game flow wireframe • UI mockups |
+| **11/10/2024** | Core Implementation | **Systems:** Camera & MediaPipe integration • Audio manager • Visual effects<br><br>**Mechanics:** Punch detection • Defense system • Hitbox generation • Combo patterns<br><br>**UI:** Menu system • HUD renderer • Transitions<br><br>**Features:** 3-level difficulty • Text caching • Fullscreen support |
+| **11/17/2024** | Audio Processing & Polish | **Audio:** WAV conversion (44100 Hz, mono, 16-bit PCM) • LUFS normalization (-16 dB)<br><br>**UI Polish:** Font size adjustments • Menu alignment fixes<br><br>**Automation:** Launcher scripts (bat/sh) • Auto dependency check |
+| **11/18/2024** | Code Refactoring | • Flatten folder structure • Remove dead code • Module docstrings • Import optimization • Clean code principles (SRP, DRY) • Clear naming conventions |
+| **11/24/2024** | Combat System Overhaul | **Major Changes:** Timing-based → sequence system • Hit-to-spawn mechanism • Immediate damage • Last hit 1.1x bonus • Player attack 4s<br><br>**Bug Fixes:** Phase transition • Sequential hitbox consistency • Phantom outline rendering |
+| **11/25/2024** | Advanced Features & Bug Fixes | **Improvements:** Hit detection expanded (landmarks 3-20) • Position-based hitbox • Body exclusion zones • Attack duration limit (4s)<br><br>**Bug Fixes:** Hitbox generation failures • 3-tier fallback • Per-hitbox counter • Collision spacing (50px → 30px)<br><br>**Cleanup:** Unused variables removed • Config audit • Debug logging |
 
-### 3. **DRY (Don't Repeat Yourself)**
-- `FontManager`: Singleton untuk caching font, avoid duplicate loading
-- `constants.py`: Centralized constants untuk avoid magic numbers
-- Reusable utilities di `math_utils.py` dan `utils.py`
+<p align="right">(<a href="#top">back to top</a>)</p>
 
-### 4. **Clear Naming Conventions**
-- Deskriptif variable names: `player_health`, `enemy_attack_cooldown`
-- Function names yang action-oriented: `start_attack()`, `register_hit()`
-- Class names yang noun-based: `GameState`, `RenderSystem`
+<!-- ROADMAP -->
+## Roadmap
 
-### 5. **Documentation**
-- Module docstring di setiap file menjelaskan purpose
-- Function docstring yang sederhana dan jelas
-- Inline comments untuk logika yang kompleks
+### Current Version (v1.0)
+- [v] Core gameplay mechanics
+- [v] MediaPipe integration
+- [v] Sequential hitbox system
+- [v] 3-level difficulty
+- [v] Audio system
+- [v] Basic UI/UX
 
-### 6. **Flat Structure**
-- Eliminasi nested folders yang tidak perlu
-- Direct import path: `from entities.player import Player`
-- Menghindari deep nesting yang membingungkan
+### Planned Features
 
----
+#### v1.1 - Polish & Optimization
+- [ ] Performance optimization untuk low-end devices
+- [ ] Adjustable camera resolution settings
+- [ ] Configurable MediaPipe confidence thresholds
+- [ ] Save/load game settings
 
-## Level Kesulitan
+#### v1.2 - Enhanced Gameplay
+- [ ] Training mode dengan combo practice
+- [ ] Multiplayer mode (local co-op)
+- [ ] Leaderboard system
+- [ ] Achievement system
+- [ ] Character customization
 
-### Easy
-- Serangan enemy lebih lambat (3-5s cooldown)
-- 70% damage enemy
-- 1.2 detik warning time
+#### v1.3 - Advanced Features
+- [ ] AI difficulty adaptation berdasarkan player skill
+- [ ] Replay system
+- [ ] Custom combo builder
+- [ ] Tournament mode
+- [ ] Mobile version (Android/iOS)
 
-### Medium (Default)
-- Serangan enemy normal (2-3.5s cooldown)
-- 100% damage enemy
-- 1.0 detik warning time
+Lihat [open issues](https://github.com/Aziz097/shadow-boxing/issues) untuk list lengkap features dan known issues.
 
-### Hard
-- Serangan enemy cepat (1.5-2.5s cooldown)
-- 130% damage enemy
-- 0.8 detik warning time
+<p align="right">(<a href="#top">back to top</a>)</p>
 
-**Catatan**: Fase serangan player tetap 3 detik untuk semua level kesulitan.
+<!-- CONTRIBUTING -->
+## Contributing
 
----
+Kontribusi membuat open source community menjadi tempat yang luar biasa untuk belajar, inspirasi, dan kreativitas. Setiap kontribusi yang Anda berikan **sangat dihargai**.
 
-## Troubleshooting
+Jika Anda memiliki saran untuk membuat project ini lebih baik, silakan fork repository dan buat pull request. Anda juga bisa membuka issue dengan tag "enhancement".
 
-### Masalah Kamera
-```python
-# Di config.py, ubah camera index:
-CAMERA_INDEX = 0  # Coba 0, 1, atau 2
-```
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-### Masalah Performa
-- Turunkan resolusi kamera di `config.py`
-- Kurangi confidence threshold MediaPipe
-- Tutup aplikasi lain yang menggunakan kamera
+### Contribution Guidelines
 
-### Masalah Deteksi MediaPipe
-- Pastikan pencahayaan bagus
-- Posisi dalam frame kamera
-- Gunakan pakaian kontras
+- Follow existing code style dan naming conventions
+- Add comments untuk logika yang kompleks
+- Update documentation jika diperlukan
+- Test changes secara menyeluruh sebelum submit
+- Write clear commit messages
 
----
+<p align="right">(<a href="#top">back to top</a>)</p>
 
-## Dependencies
-
-```
-opencv-python==4.10.0.84
-mediapipe==0.10.14
-numpy==1.26.4
-pygame==2.5.2
-```
-
----
-
-## Credits
-
-**Development Team:**
-- **Aziz Kurniawan** - Base Game Logic, MediaPipe Tuning, Refactor, QA
-- **Harisya Miranti** - UI/UX, Visual Effects & Assets
-- **Muhammad Yusuf** - MediaPipe Integration & Flow Game
-
-**Technologies:**
-- MediaPipe by Google
-- OpenCV
-- Pygame Community
-- Python Software Foundation
-
----
-
+<!-- LICENSE -->
 ## License
 
-This project is open source and available under the MIT License.
+Distributed under the MIT License. See `LICENSE` for more information.
 
----
+<p align="right">(<a href="#top">back to top</a>)</p>
 
-## References
-- [MediaPipe Documentation](https://google.github.io/mediapipe/)
-- [OpenCV Documentation](https://opencv.org/)
-- [Pygame Documentation](https://www.pygame.org/docs/)
-- [Github Copilot](https://github.com/features/copilot)
-- [Qwen AI](https://qwen.ai/home)
+<!-- TEAM -->
+## Team
 
-### Assets
-#### Music & Sound Effects
-- [Myinstants](https://www.myinstants.com/en/index/us/)
-#### Fonts
-- [Press Start 2P](https://www.fontsquirrel.com/fonts/press-start-2p)
-#### Sprites
-- [Imagen by Gemini](https://gemini.google.com/app)
+### Development Team
 
+| Nama | NIM | Role | GitHub |
+|------|-----|------|--------|
+| **Aziz Kurniawan** | 122140097 | Lead Developer, Game Logic, MediaPipe Tuning, QA | [@Aziz097](https://github.com/Aziz097) |
+| **Harisya Miranti** | 122140049 | UI/UX Designer, Visual Effects, Asset Creation | [@harisya14](https://github.com/harisya14) |
+| **Muhammad Yusuf** | 122140193 | MediaPipe Integration, Game Flow, Systems Architecture | [@muhamyusuf](https://github.com/muhamyusuf) |
 
+### Contact
+
+Project Link: [https://github.com/Aziz097/shadow-boxing](https://github.com/Aziz097/shadow-boxing)
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+<!-- ACKNOWLEDGMENTS -->
+## Acknowledgments
+
+### Technologies & Frameworks
+* [MediaPipe by Google](https://google.github.io/mediapipe/) - Hand, Pose, Face detection
+* [OpenCV](https://opencv.org/) - Computer vision library
+* [Pygame](https://www.pygame.org/) - Game development framework
+* [NumPy](https://numpy.org/) - Numerical computing
+
+### Assets & Resources
+* [Myinstants](https://www.myinstants.com/) - Sound effects collection
+* [Press Start 2P Font](https://www.fontsquirrel.com/fonts/press-start-2p) - Retro game font
+* [Imagen by Gemini](https://gemini.google.com/app) - Sprite generation
+
+### Development Tools
+* [GitHub Copilot](https://github.com/features/copilot) - AI pair programming
+* [Qwen AI](https://qwen.ai/home) - Code assistance
+
+### Documentation & Learning
+* [Best-README-Template](https://github.com/othneildrew/Best-README-Template) - README structure
+* [Choose an Open Source License](https://choosealicense.com/)
+* [Img Shields](https://shields.io/) - Badge generation
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+<!-- MARKDOWN LINKS & IMAGES -->
+[contributors-shield]: https://img.shields.io/github/contributors/Aziz097/shadow-boxing.svg?style=for-the-badge
+[contributors-url]: https://github.com/Aziz097/shadow-boxing/graphs/contributors
+[issues-shield]: https://img.shields.io/github/issues/Aziz097/shadow-boxing.svg?style=for-the-badge
+[issues-url]: https://github.com/Aziz097/shadow-boxing/issues
+[license-shield]: https://img.shields.io/github/license/Aziz097/shadow-boxing.svg?style=for-the-badge
+[license-url]: https://github.com/Aziz097/shadow-boxing/blob/master/LICENSE
+[python-shield]: https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white
+[python-url]: https://www.python.org/
+
+[product-screenshot]: images/banner.png
+[demo-gif]: images/demo/demo-ezgif.com-optimize.gif
+
+[Python.org]: https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white
+[Python-url]: https://www.python.org/
+[OpenCV.org]: https://img.shields.io/badge/OpenCV-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white
+[OpenCV-url]: https://opencv.org/
+[MediaPipe.dev]: https://img.shields.io/badge/MediaPipe-0097A7?style=for-the-badge&logo=google&logoColor=white
+[MediaPipe-url]: https://google.github.io/mediapipe/
+[Pygame.org]: https://img.shields.io/badge/Pygame-2E7D32?style=for-the-badge&logo=python&logoColor=white
+[Pygame-url]: https://www.pygame.org/
+[NumPy.org]: https://img.shields.io/badge/NumPy-013243?style=for-the-badge&logo=numpy&logoColor=white
+[NumPy-url]: https://numpy.org/
