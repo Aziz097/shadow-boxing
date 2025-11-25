@@ -243,24 +243,16 @@ class RenderSystem:
                 end_x = int(end_point.x * w)
                 end_y = int(end_point.y * h)
                 
-                # Draw line (cyan color for visibility)
-                cv2.line(frame, (start_x, start_y), (end_x, end_y), (255, 255, 0), 2)
+                # Draw line 
+                cv2.line(frame, (start_x, start_y), (end_x, end_y), (0, 0, 255), 2)
             
             # Draw landmarks (circles)
             for idx, landmark in enumerate(hand_landmarks.landmark):
                 x = int(landmark.x * w)
                 y = int(landmark.y * h)
-                
-                # Different colors for different landmarks
-                if idx == 0:  # Wrist
-                    color = (0, 255, 0)  # Green
-                    radius = 5
-                elif idx == 9:  # Middle finger MCP (for defense)
-                    color = (0, 0, 255)  # Red
-                    radius = 6
-                else:
-                    color = (255, 255, 0)  # Cyan
-                    radius = 3
+
+                color = (0, 0, 255)  
+                radius = 4
                 
                 cv2.circle(frame, (x, y), radius, color, -1)
         
@@ -629,6 +621,10 @@ class RenderSystem:
         current_time = time.time()
         
         for hitbox in hitboxes:
+            # Skip hitboxes that are not visible yet (waiting to spawn)
+            if not hitbox.get('visible', True):
+                continue
+            
             x, y = hitbox['x'], hitbox['y']
             size = hitbox['width']
             radius = hitbox['radius']
