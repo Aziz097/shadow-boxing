@@ -357,28 +357,6 @@ shadow-boxing/
 - [v] Audio system
 - [v] Basic UI/UX
 
-### Planned Features
-
-#### v1.1 - Polish & Optimization
-- [ ] Performance optimization untuk low-end devices
-- [ ] Adjustable camera resolution settings
-- [ ] Configurable MediaPipe confidence thresholds
-- [ ] Save/load game settings
-
-#### v1.2 - Enhanced Gameplay
-- [ ] Training mode dengan combo practice
-- [ ] Multiplayer mode (local co-op)
-- [ ] Leaderboard system
-- [ ] Achievement system
-- [ ] Character customization
-
-#### v1.3 - Advanced Features
-- [ ] AI difficulty adaptation berdasarkan player skill
-- [ ] Replay system
-- [ ] Custom combo builder
-- [ ] Tournament mode
-- [ ] Mobile version (Android/iOS)
-
 Lihat [open issues](https://github.com/Aziz097/shadow-boxing/issues) untuk list lengkap features dan known issues.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
