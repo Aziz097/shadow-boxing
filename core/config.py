@@ -21,7 +21,7 @@ class Config:
     FULLSCREEN = True
     
     # === Camera Settings ===
-    CAMERA_INDEX = 1
+    CAMERA_INDEX = 0
     CAMERA_WIDTH = 1280
     CAMERA_HEIGHT = 720
     
