@@ -29,6 +29,9 @@ class RenderSystem:
         
         # VFX particles
         self.particles = []
+        
+        # Store last helm size from face detection
+        self.last_helm_size = (120, 120)  # Default size
     
     def _initialize_display(self):
         """Initialize pygame display"""
@@ -265,7 +268,7 @@ class RenderSystem:
         
         helm_x = None
         helm_y = None
-        helm_size = (120, 120)
+        helm_size = self.last_helm_size  # Use last known size instead of default
         
         # Try to get position from face mesh first - USE OUTER BOUNDARY
         if face_results and face_results.multi_face_landmarks:
@@ -291,6 +294,9 @@ class RenderSystem:
             helm_height = max(100, int(face_height * 1.3))
             helm_size = (helm_width, helm_height)
             
+            # Save this size for fallback scenarios
+            self.last_helm_size = helm_size
+            
             # Position helm centered on face center, moved up by 40px
             helm_x = center_x - helm_width // 2
             helm_y = center_y - helm_height // 2 - 40  # Tarik ke atas 40px
@@ -303,12 +309,14 @@ class RenderSystem:
             if nose.visibility > 0.5:  # Check if landmark is visible
                 center_x = int(nose.x * self.config.CAMERA_WIDTH)
                 center_y = int(nose.y * self.config.CAMERA_HEIGHT)
+                # Use last known helm size instead of default
                 helm_x = center_x - helm_size[0] // 2
                 helm_y = center_y - helm_size[1] // 2
         
         # Fallback to face bbox if available
         elif face_bbox is not None:
             x, y, w, h = face_bbox
+            # Use last known helm size
             helm_x = x + w // 2 - helm_size[0] // 2
             helm_y = y + h // 2 - helm_size[1] // 2
         
