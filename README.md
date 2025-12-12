@@ -210,7 +210,11 @@ Ikuti langkah-langkah berikut untuk instalasi menggunakan `uv` (package manager 
 
 ### Demo
 
+[![Watch Demo Video](https://img.shields.io/badge/_Watch_Demo-YouTube-red?style=for-the-badge&logo=youtube)](https://youtu.be/2ITQw31MRs8)
+
 ![Gameplay Demo][demo-gif]
+
+> **[Klik di sini untuk menonton video demo lengkap di YouTube](https://youtu.be/2ITQw31MRs8)**
 
 ### Screenshots
 
