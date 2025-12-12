@@ -134,29 +134,7 @@ Ikuti langkah-langkah berikut untuk menjalankan game di local machine Anda.
 
 ### Installation
 
-#### Option 1: Quick Start (Recommended)
-
-Gunakan launcher script untuk instalasi dan menjalankan game secara otomatis:
-
-**Windows:**
-```powershell
-shadow_boxing.bat
-```
-
-**Linux/Mac:**
-```bash
-chmod +x shadow_boxing.sh
-./shadow_boxing.sh
-```
-
-Script akan otomatis:
-- ✅ Memeriksa instalasi Python
-- ✅ Mengecek dan menginstall dependencies
-- ✅ Menjalankan game
-
----
-
-#### Option 2: Manual Installation
+Ikuti langkah-langkah berikut untuk instalasi menggunakan `uv` (package manager modern untuk Python):
 
 1. **Clone repository**
    ```sh
@@ -164,32 +142,49 @@ Script akan otomatis:
    cd shadow-boxing
    ```
 
-2. **Buat virtual environment** (opsional tapi recommended)
+2. **Install uv**
    ```sh
-   python -m venv venv
+   pip install uv
    ```
 
-3. **Aktifkan virtual environment**
+3. **Install uv (PowerShell script)**
+   ```powershell
+   powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+   ```
+
+4. **Buat virtual environment dengan uv**
+   ```sh
+   uv venv shadow-boxing-uv
+   ```
+
+5. **Aktifkan virtual environment**
    
    **Windows:**
    ```powershell
-   .\venv\Scripts\Activate.ps1
+   shadow-boxing-uv\Scripts\activate
    ```
    
    **Linux/Mac:**
    ```bash
-   source venv/bin/activate
+   source shadow-boxing-uv/bin/activate
    ```
 
-4. **Install dependencies**
+6. **Install Python 3.10 via uv**
    ```sh
-   pip install -r requirements.txt
+   uv python install 3.10
    ```
 
-5. **Jalankan game**
+7. **Install dependencies**
+   ```sh
+   uv pip install -r requirements.txt
+   ```
+
+8. **Jalankan game**
    ```sh
    python main.py
    ```
+
+> **Note**: `uv` adalah package manager yang jauh lebih cepat dari pip tradisional. Instalasi dependencies bisa 10-100x lebih cepat!
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -416,6 +411,7 @@ Project Link: [https://github.com/Aziz097/shadow-boxing](https://github.com/Aziz
 * [OpenCV](https://opencv.org/) - Computer vision library
 * [Pygame](https://www.pygame.org/) - Game development framework
 * [NumPy](https://numpy.org/) - Numerical computing
+* [uv by Astral](https://docs.astral.sh/uv/getting-started/installation/) - Fast Python package manager
 
 ### Assets & Resources
 * [Myinstants](https://www.myinstants.com/) - Sound effects collection
