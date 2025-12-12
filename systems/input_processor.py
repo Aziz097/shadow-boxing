@@ -126,13 +126,6 @@ class InputProcessor:
                                 'damage': damage,
                                 'time': current_time
                             })
-                            
-                            # Play sound based on hit type
-                            if hasattr(game_state, 'play_sound'):
-                                if is_last:
-                                    game_state.play_sound("strong_punch")
-                                else:
-                                    game_state.play_sound("weak_punch")
 
         
         # Check defense during enemy attack

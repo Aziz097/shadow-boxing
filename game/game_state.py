@@ -91,20 +91,6 @@ class GameState:
         # Reset enemy attack system
         self.enemy_attack_system.reset()
         self.enemy_damage_applied = False
-        
-    def _generate_hitboxes(self):
-        """Generate random hitboxes for player attack phase"""
-        hitboxes = []
-        num_hitboxes = random.randint(self.config.MIN_HITBOXES, self.config.MAX_HITBOXES)
-        
-        for _ in range(num_hitboxes):
-            # Ensure hitboxes are within screen bounds with margin
-            x = random.randint(self.config.HITBOX_MARGIN, self.config.CAMERA_WIDTH - self.config.HITBOX_MARGIN - self.config.HITBOX_SIZE)
-            y = random.randint(self.config.HITBOX_MARGIN, self.config.CAMERA_HEIGHT - self.config.HITBOX_MARGIN - self.config.HITBOX_SIZE)
-            
-            hitboxes.append((x, y, self.config.HITBOX_SIZE, self.config.HITBOX_SIZE))
-        
-        return hitboxes
     
     def start_rest_period(self):
         """Start rest period between rounds"""
@@ -303,36 +289,6 @@ class GameState:
             self.current_state = constants.GAME_STATES['PLAYING']
             self.round_start_time = current_time
             self.phase_start_time = current_time
-    
-    def _select_enemy_target(self):
-        """Select a random target on player's face"""
-        # In a real implementation, this would use actual face landmarks
-        # For now, we'll use a random position near the face center
-        if self.face_bbox:
-            x, y, w, h = self.face_bbox
-            face_center_x = x + w // 2
-            face_center_y = y + h // 2
-            
-            # Add some randomness to the target position
-            target_x = face_center_x + random.randint(-30, 30)
-            target_y = face_center_y + random.randint(-30, 30)
-            
-            return (target_x, target_y)
-        
-        # Fallback to screen center
-        return (self.config.CAMERA_WIDTH // 2, self.config.CAMERA_HEIGHT // 3)
-    
-    def _calculate_combo_damage(self, hit_count):
-        """Calculate damage based on number of hits in combo"""
-        if hit_count >= 4:
-            return constants.DAMAGE_VALUES['COMBO_4']
-        elif hit_count >= 3:
-            return constants.DAMAGE_VALUES['COMBO_3']
-        elif hit_count >= 2:
-            return constants.DAMAGE_VALUES['COMBO_2']
-        elif hit_count >= 1:
-            return constants.DAMAGE_VALUES['COMBO_1']
-        return 0
     
     def register_hit(self, hitbox):
         """Register a hit on a hitbox with sequence tracking"""

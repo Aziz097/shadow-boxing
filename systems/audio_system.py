@@ -14,6 +14,7 @@ class AudioSystem:
             'enemy-punch': self._load_sound("enemy-punch.wav"),
             'enemy-punch-bloked': self._load_sound("punch-blocked.wav"),
             'enemy-punch-missed': self._load_sound("enemy-punch-missed.wav"),
+            'bell': self._load_sound("boxing-bell.wav"),
             'round_1': self._load_sound(os.path.join("round", "round_1.wav")),
             'round_2': self._load_sound(os.path.join("round", "round_2.wav")),
             'round_3': self._load_sound(os.path.join("round", "final_round.wav"))
