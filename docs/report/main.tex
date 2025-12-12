@@ -6,12 +6,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%% PACKAGE starts HERE %%%%%%%%%%%%%%%%%%%%%%%%
 \usepackage{graphicx}
 \usepackage{caption}
-\usepackage{microtype}
+% \usepackage{microtype}  % Disabled - causes font expansion errors
 \captionsetup[table]{name=Tabel}
 \captionsetup[figure]{name=Gambar}
 \usepackage{tabulary}
 \usepackage{minted}
-% \usepackage{amsmath}
+\usepackage{amsmath}
 \usepackage{fancyhdr}
 % \usepackage{amssymb}
 % \usepackage{amsthm}
@@ -32,7 +32,7 @@
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{multirow}
-\usepackage{psfrag}
+% \usepackage{psfrag}  % Disabled - not compatible with pdflatex
 \usepackage[T1]{fontenc}
 \usepackage[scaled]{beramono}
 % Enable inserting code into the document
@@ -444,7 +444,7 @@ numpy==1.26.4
 pygame==2.5.2
 \end{lstlisting}
 
-Launcher scripts (\texttt{shadow\_boxing.bat} dan \texttt{shadow\_boxing.sh}) secara otomatis memeriksa dan menginstall dependencies sebelum menjalankan game, memastikan seamless user experience.
+Penggunaan version pinning memastikan kompatibilitas dan reproducibility saat instalasi dependencies.
 
 \section{Implementasi}
 
@@ -455,34 +455,45 @@ Project ini disusun dengan struktur modular yang mengikuti prinsip separation of
 shadow-boxing/
 |-- main.py                    # Entry point & game loop
 |-- requirements.txt           # Dependencies
+|-- README.md                  # Documentation
+|-- LICENSE                    # MIT License
 |-- core/                      # Core utilities
+|   |-- __init__.py
 |   |-- config.py              # Game configuration
 |   |-- constants.py           # Game constants
 |   |-- math_utils.py          # Math helpers
-|   |-- utils.py               # Font & image utilities
+|   |-- utils.py               # Font utilities
 |-- systems/                   # Game systems
+|   |-- __init__.py
 |   |-- vision_system.py       # MediaPipe integration
 |   |-- audio_system.py        # Sound manager
 |   |-- render_system.py       # Graphics rendering
 |   |-- input_processor.py     # Input detection
 |-- entities/                  # Game entities
-|   |-- player/                # Player state
-|   |-- enemy/                 # Enemy AI
+|   |-- __init__.py
+|   |-- player.py              # Player state
+|   |-- enemy.py               # Enemy AI
 |-- game/                      # Game logic
+|   |-- __init__.py
 |   |-- game_state.py          # State management
 |   |-- hit_box_system.py      # Hitbox generation
-|   |-- round_manager.py       # Round system
-|   |-- damage_system.py       # Damage calculation
+|   |-- combo_system.py        # Combo patterns
+|   |-- enemy_attack_system.py # Enemy attack logic
 |-- ui/                        # User interface
+|   |-- __init__.py
 |   |-- menu_system.py         # Main menu
 |   |-- hud_renderer.py        # HUD elements
 |   |-- fight_overlay.py       # Round transitions
 |   |-- result_screen.py       # Results
 |-- assets/                    # Game assets
-    |-- font/                  # PressStart2P.ttf
-    |-- sprites/               # Game sprites
-    |-- sfx/                   # Sound effects
-    |-- music/                 # Background music
+|   |-- font/                  # PressStart2P.ttf
+|   |-- sprites/               # Game sprites (PNG)
+|   |-- wav/
+|       |-- sfx/               # Sound effects (WAV)
+|       |-- music/             # Background music (WAV)
+|-- images/                    # Documentation images
+    |-- screenshots/           # Game screenshots
+    |-- demo/                  # Demo GIFs
 \end{lstlisting}
 
 \subsection{Vision System - MediaPipe Integration}
@@ -753,10 +764,10 @@ Untuk memastikan target tidak menutupi wajah atau tubuh pemain, sistem membuat z
 
 Antarmuka game dimulai dengan menu utama yang memungkinkan pemain memilih tingkat kesulitan sebelum bermain. Selama pertarungan berlangsung, layar menampilkan HUD (Heads-Up Display) yang berisi bar kesehatan untuk melihat sisa nyawa pemain dan musuh, timer untuk menghitung waktu ronde, penghitung kombo untuk melacak jumlah pukulan beruntun, dan indikator fase untuk menunjukkan giliran siapa yang sedang menyerang. Saat transisi antar ronde, muncul overlay bertuliskan "ROUND X" atau "FIGHT!" untuk memberi jeda visual. Setelah pertandingan selesai, layar hasil menampilkan statistik lengkap termasuk jumlah pukulan yang berhasil mengenai target (hits landed) dan total damage yang diberikan ke musuh, sehingga pemain dapat melihat performa mereka.
 
-\end {enumerate}
+\end{enumerate}
 \subsection{Technical Achievements}
 
-\begin {enumerate}
+\begin{enumerate}
 \item \textbf{Hitbox Generation Success Rate: 100\%}
 
 Sistem berhasil mencapai tingkat keberhasilan 100\% dalam menempatkan target pukulan (hitbox) dengan menggunakan mekanisme tiga tingkat cadangan. Tingkat pertama menggunakan aturan lengkap dengan zona terlarang penuh dan jarak minimal 30 piksel antar target. Jika gagal, tingkat kedua mencoba dengan aturan yang lebih longgar: zona wajah diperkecil menjadi 50 piksel dan zona tubuh dihilangkan, dengan jarak minimal 20 piksel. Jika masih gagal, tingkat ketiga memaksa target muncul dengan pemeriksaan minimal untuk memastikan game tetap bisa dimainkan.
@@ -787,6 +798,8 @@ Input-to-Effect Latency & <100ms \\ \hline
 Memory Usage & ~500MB \\ \hline
 \end{tabular}
 \end{table}
+
+\end{enumerate}
 
 \subsection{Game Balance Analysis}
 
@@ -907,27 +920,26 @@ pygame==2.5.2
 python -u main.py
 \end{lstlisting}
 
-\subsubsection{Instalasi Menggunakan Launcher Scripts}
-Untuk kemudahan, project ini menyediakan launcher scripts yang secara otomatis memeriksa dan menginstall dependencies:
+\subsubsection{Virtual Environment (Recommended)}
+Disarankan menggunakan virtual environment untuk menghindari konflik dependencies:
 
 \textbf{Windows:}
 \begin{lstlisting}[language=bash]
-shadow_boxing.bat
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+python main.py
 \end{lstlisting}
 
 \textbf{Linux/macOS:}
 \begin{lstlisting}[language=bash]
-chmod +x shadow_boxing.sh
-./shadow_boxing.sh
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python main.py
 \end{lstlisting}
 
-Launcher scripts akan:
-\begin{enumerate}
-    \item Memeriksa apakah Python terinstall
-    \item Memeriksa ketersediaan library yang diperlukan (opencv, mediapipe, pygame)
-    \item Menginstall library yang belum tersedia secara otomatis
-    \item Menjalankan game setelah semua dependencies terpenuhi
-\end{enumerate}
+\textbf{Catatan Penting:} MediaPipe 0.10.14 memerlukan Python 3.10. Pastikan menggunakan Python versi yang sesuai.
 
 \subsubsection{Cara Penggunaan}
 
@@ -1077,5 +1089,55 @@ Project dikembangkan secara iteratif dengan milestone-milestone berikut:
     \item Rautaray, S. S., \& Agrawal, A. (2015). \textit{Vision based hand gesture recognition for human computer interaction: a survey}. Artificial Intelligence Review, 43(1), 1-54. doi:10.1007/s10462-012-9356-9
     \item Maggioni, E., Cobden, R., \& Obrist, M. (2020). \textit{Design and development challenges in multimodal gesture recognition}. ACM Transactions on Computer-Human Interaction (TOCHI), 27(4), 1-43. \url{https://doi.org/10.1145/3397869}
 \end{enumerate}
+
+\newpage
+\appendix
+\section{Lampiran: Screenshot Game}
+
+Berikut adalah screenshot dari berbagai tampilan game Shadow Boxing:
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.85\textwidth]{Figure/home.png}
+\caption{Tampilan Menu Utama - Player dapat memilih opsi Start Game, Difficulty, Help, atau Quit}
+\label{fig:home}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.85\textwidth]{Figure/select difficulty.png}
+\caption{Tampilan Pemilihan Difficulty - Tersedia tiga tingkat kesulitan: Easy, Medium, dan Hard}
+\label{fig:difficulty}
+\end{figure}
+
+\newpage
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.85\textwidth]{Figure/ingame.png}
+\caption{Tampilan Gameplay - Menampilkan HUD dengan health bar, timer, combo counter, dan hitbox target}
+\label{fig:ingame}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.85\textwidth]{Figure/rest.png}
+\caption{Tampilan Rest Period - Jeda antar ronde dengan countdown timer}
+\label{fig:rest}
+\end{figure}
+
+\newpage
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.85\textwidth]{Figure/ko.png}
+\caption{Tampilan KO Effect - Efek visual saat salah satu pihak kalah KO}
+\label{fig:ko}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.85\textwidth]{Figure/result.png}
+\caption{Tampilan Result Screen - Menampilkan hasil akhir pertandingan dengan skor}
+\label{fig:result}
+\end{figure}
 
 \end{document}
