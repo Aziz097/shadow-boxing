@@ -1,5 +1,5 @@
 # Fdb version 4
-["pdflatex"] 1765464694.78726 "c:/shadow-boxing/shadow-boxing/docs/report/main.tex" "main.pdf" "main" 1765464698.06163 2
+["pdflatex"] 1765515630.3707 "c:/shadow-boxing/shadow-boxing/docs/report/main.tex" "main.pdf" "main" 1765515632.97661 2
   "C:/Users/User/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1763388791 82739 f5083eb4fb4187cbf3070fd6dc48a16f ""
   "C:/Users/User/AppData/Local/MiKTeX/miktex/data/le/pdftex/pdflatex.fmt" 1756436373 24224615 e9536e71ce3dbb6dd497cdd421a52e04 ""
   "C:/Users/User/AppData/Local/Programs/MiKTeX/fonts/tfm/jknappen/ec/ecbx1095.tfm" 993061956 3228 aacd2ac2d814480e4422ad7e830fd2d4 ""
@@ -195,9 +195,10 @@
   "C:/Users/User/AppData/Local/Programs/MiKTeX/tex/latex/upquote/upquote.sty" 1335534756 1088 517e01cde97c1c0baf72e69d43aa5a2e ""
   "C:/Users/User/AppData/Local/Programs/MiKTeX/tex/latex/url/url.sty" 1388490452 12796 8edb7d69a20b857904dd0ea757c14ec9 ""
   "C:/Users/User/AppData/Local/Programs/MiKTeX/tex/latex/xcolor/xcolor.sty" 1700127522 55487 80a65caedd3722f4c20a14a69e785d8f ""
-  "c:/shadow-boxing/shadow-boxing/docs/report/main.tex" 1765464685 56480 4a6ca793bec9373eed7682a36a4a3a17 ""
-  "main.aux" 1765464697 138 dfd98a311dd1033c83c001c747190af7 "pdflatex"
-  "main.tex" 1765464685 56480 4a6ca793bec9373eed7682a36a4a3a17 ""
+  "Figure/ifitera-header.png" 1764690583 105262 7fe1bcaf31c1fe943ce3e952b4c15ef1 ""
+  "c:/shadow-boxing/shadow-boxing/docs/report/main.tex" 1765515627 56541 00d38ca69580e7005d1a42cfa5d73b75 ""
+  "main.aux" 1765515632 138 dfd98a311dd1033c83c001c747190af7 "pdflatex"
+  "main.tex" 1765515627 56541 00d38ca69580e7005d1a42cfa5d73b75 ""
   (generated)
   "main.aux"
   "main.log"
